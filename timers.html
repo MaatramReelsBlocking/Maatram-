@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Maatram — Focus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:        #06090B;
+    --surface:   rgba(255,255,255,.022);
+    --surface-2: rgba(255,255,255,.05);
+    --line:      rgba(255,255,255,.08);
+    --line-hi:   rgba(255,255,255,.18);
+    --text:      #ECF2F1;
+    --muted:     #7E8A8C;
+    --faint:     #4C575A;
+
+    --green:     #34D399;
+    --blue:      #4E9BFF;
+    --accent:    var(--green);
+
+    --expo: cubic-bezier(.16,1,.3,1);
+    --sans: 'Geist','Inter',-apple-system,system-ui,sans-serif;
+    --mono: 'Geist Mono','JetBrains Mono',ui-monospace,monospace;
+
+    --s1:8px; --s2:16px; --s3:24px; --s4:40px; --s5:64px;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+
+  body{
+    font-family:var(--sans);
+    background:var(--bg);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+
+  ::selection{ background:var(--accent); color:var(--bg); }
+  :focus-visible{ outline:1px solid var(--accent); outline-offset:3px; border-radius:6px; }
+  button{ font-family:inherit; cursor:pointer; }
+
+  /* ================= reactive atmosphere ================= */
+  .amb{ position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+
+  /* .par = pointer parallax (transform via rAF)
+     .blob = ambient drift (Motion). Separate layers so they never fight. */
+  .par{ position:absolute; inset:0; will-change:transform; }
+
+  .blob{
+    position:absolute; border-radius:50%; filter:blur(80px);
+    will-change:transform; transition:background 1s var(--expo);
+  }
+  .blob-1{ width:540px; height:540px; top:-16%; left:50%; margin-left:-270px;
+           background:var(--accent); opacity:.26; }
+  .blob-2{ width:460px; height:460px; bottom:-20%; left:4%;
+           background:var(--blue); opacity:.16; }
+  .blob-3{ width:340px; height:340px; top:34%; right:-6%;
+           background:var(--accent); opacity:.09; }
+
+  /* cursor light — gradient, not filter:blur (blur would cost frames) */
+  .cglow{
+    position:fixed; top:0; left:0; width:620px; height:620px; border-radius:50%;
+    margin:-310px 0 0 -310px; pointer-events:none; z-index:0; opacity:0;
+    will-change:transform;
+    background:radial-gradient(circle,
+      color-mix(in srgb, var(--accent) 11%, transparent) 0%,
+      color-mix(in srgb, var(--accent) 4%, transparent) 38%,
+      transparent 66%);
+    transition:opacity 1s var(--expo), background 1s var(--expo);
+  }
+  .cglow.on{ opacity:1; }
+
+  .grid-fade{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255,255,255,.03) 1px, transparent 1px);
+    background-size:60px 60px;
+    -webkit-mask-image:radial-gradient(circle at 50% 34%, black 0%, transparent 70%);
+            mask-image:radial-gradient(circle at 50% 34%, black 0%, transparent 70%);
+  }
+
+  .vig{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background:radial-gradient(ellipse at 50% 40%, transparent 42%, rgba(0,0,0,.5) 100%);
+  }
+
+  .wrap{ position:relative; z-index:1; max-width:760px; margin:0 auto;
+         padding:var(--s3) var(--s3) var(--s5); }
+
+  /* ================= header ================= */
+  .top{ display:flex; align-items:center; justify-content:space-between;
+        padding-bottom:var(--s2); border-bottom:1px solid var(--line); }
+  .brand{ font-size:15px; font-weight:600; letter-spacing:-.02em; }
+  .brand i{ font-style:normal; color:var(--accent); transition:color .6s var(--expo); }
+  .tag{ font-size:11px; color:var(--faint); letter-spacing:.06em; margin-top:2px; }
+  .bank{ text-align:right; }
+  .bank-n{ font-family:var(--mono); font-size:18px; font-weight:500;
+           font-variant-numeric:tabular-nums; letter-spacing:-.02em; }
+  .bank-l{ font-size:10px; color:var(--faint); letter-spacing:.1em;
+           text-transform:uppercase; margin-top:2px; }
+
+  /* ================= mode cards ================= */
+  .modes{ display:grid; grid-template-columns:1fr 1fr; gap:var(--s1); margin-top:var(--s4); }
+
+  .mode{
+    position:relative; text-align:left; overflow:hidden; isolation:isolate;
+    background:var(--surface); border:1px solid var(--line); border-radius:12px;
+    padding:15px 16px; color:var(--text);
+    -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+    transition:border-color .4s var(--expo), background .4s var(--expo), transform .15s var(--expo);
+  }
+  /* cursor spotlight inside each card */
+  .mode::before{
+    content:''; position:absolute; inset:0; z-index:-1; pointer-events:none;
+    opacity:0; transition:opacity .45s var(--expo);
+    background:radial-gradient(220px circle at var(--mx,50%) var(--my,50%),
+               color-mix(in srgb, var(--m) 17%, transparent) 0%, transparent 62%);
+  }
+  .mode:hover::before{ opacity:1; }
+  .mode:hover{ border-color:var(--line-hi); }
+  .mode:active{ transform:scale(.985); }
+  .mode::after{
+    content:''; position:absolute; left:0; right:0; bottom:0; height:1px;
+    background:var(--m); transform:scaleX(0); transform-origin:left;
+    transition:transform .55s var(--expo);
+  }
+  .mode[aria-pressed="true"]::after{ transform:scaleX(1); }
+  .mode[aria-pressed="true"]{ background:var(--surface-2); border-color:var(--line-hi); }
+  .mode[data-mode="pomodoro"]{ --m:var(--green); }
+  .mode[data-mode="deep"]    { --m:var(--blue);  }
+
+  .m-name{ font-size:13px; font-weight:500; letter-spacing:-.01em; }
+  .m-split{ font-family:var(--mono); font-size:11px; color:var(--muted);
+            margin-top:4px; font-variant-numeric:tabular-nums; }
+  .m-pts{ position:absolute; top:15px; right:16px; font-family:var(--mono);
+          font-size:10px; font-weight:500; color:var(--m); opacity:.9; }
+
+  /* ================= stage ================= */
+  .stage{ text-align:center; padding-top:var(--s5); }
+
+  .phase{ display:inline-flex; align-items:center; gap:7px; font-size:10px;
+          letter-spacing:.16em; text-transform:uppercase; color:var(--muted); }
+  .dot{ width:5px; height:5px; border-radius:50%; background:var(--accent);
+        transition:background .6s var(--expo); }
+  .dot.live{ animation:breathe 4s ease-in-out infinite; }
+  @keyframes breathe{
+    0%,100%{ opacity:.35; transform:scale(1); }
+    50%    { opacity:1;   transform:scale(1.5); }
+  }
+
+  .dial{ position:relative; width:280px; height:280px; margin:var(--s3) auto 0; }
+  .dial svg{ width:100%; height:100%; transform:rotate(-90deg); overflow:visible; }
+  .track{ fill:none; stroke:rgba(255,255,255,.07); stroke-width:1.5; }
+  .arc{
+    fill:none; stroke:var(--accent); stroke-width:1.5; stroke-linecap:round;
+    transition:stroke-dashoffset 1s linear, stroke .6s var(--expo);
+    filter:drop-shadow(0 0 8px color-mix(in srgb, var(--accent) 60%, transparent));
+  }
+
+  .clock{ position:absolute; inset:0; display:flex; flex-direction:column;
+          align-items:center; justify-content:center; }
+
+  .time{ display:flex; align-items:center; font-family:var(--mono); font-weight:400;
+         font-size:56px; letter-spacing:-.045em; height:1.1em; }
+  .slot{ position:relative; width:.62em; height:1.1em; overflow:hidden; }
+  .slot .d{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-variant-numeric:tabular-nums; will-change:transform;
+  }
+  .colon{ width:.34em; text-align:center; opacity:.28; }
+  .sub{ font-size:11px; color:var(--faint); margin-top:10px; letter-spacing:.04em; }
+
+  /* ================= controls ================= */
+  .ctr{ display:flex; gap:var(--s1); justify-content:center; margin-top:var(--s4); }
+  .btn{
+    font-size:13px; font-weight:500; padding:9px 20px; border-radius:8px;
+    border:1px solid var(--line); background:var(--surface); color:var(--text);
+    -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+    transition:border-color .3s var(--expo), background .3s var(--expo), transform .12s var(--expo);
+  }
+  .btn:hover{ border-color:var(--line-hi); background:var(--surface-2); }
+  .btn:active{ transform:scale(.97); }
+  .btn-go{ background:var(--text); border-color:var(--text); color:var(--bg);
+           min-width:118px; font-weight:600; }
+  .btn-go:hover{ background:#fff; border-color:#fff; }
+
+  .hint{ margin-top:var(--s3); font-size:11px; color:var(--faint); }
+  .hint kbd{ font-family:var(--mono); font-size:10px; color:var(--muted);
+             border:1px solid var(--line); border-radius:4px; padding:2px 5px; margin:0 1px; }
+
+  /* ================= power-up ================= */
+  .pu{
+    position:fixed; inset:0; z-index:40; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; padding:var(--s3); text-align:center;
+    background:rgba(6,9,11,.8);
+    -webkit-backdrop-filter:blur(22px); backdrop-filter:blur(22px);
+    opacity:0; visibility:hidden;
+  }
+  .pu.on{ visibility:visible; }
+  .pu-glow{
+    position:absolute; width:620px; height:620px; border-radius:50%; pointer-events:none;
+    background:radial-gradient(circle, color-mix(in srgb, var(--accent) 28%, transparent) 0%, transparent 66%);
+    filter:blur(48px);
+  }
+  .ring{ position:absolute; width:200px; height:200px; border-radius:50%;
+         border:1px solid var(--accent); opacity:0; pointer-events:none; }
+  .pu-in{ position:relative; display:flex; flex-direction:column; align-items:center; }
+  .pu-eye{ font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--accent); }
+  .pu-h{ font-size:clamp(24px,5vw,34px); font-weight:600; letter-spacing:-.035em; margin-top:10px; }
+  .pu-pts{ font-family:var(--mono); font-weight:500; font-size:clamp(58px,13vw,86px);
+           letter-spacing:-.05em; color:var(--accent); line-height:1; margin:18px 0 4px;
+           font-variant-numeric:tabular-nums; }
+  .pu-sub{ font-size:13px; color:var(--muted); max-width:320px; line-height:1.6; }
+  .pu-act{ display:flex; gap:var(--s1); margin-top:var(--s4); flex-wrap:wrap; justify-content:center; }
+
+  @media (max-width:560px){
+    .modes{ grid-template-columns:1fr; }
+    .dial{ width:240px; height:240px; }
+    .time{ font-size:46px; }
+    .wrap{ padding:var(--s2) var(--s2) var(--s4); }
+    .blob{ filter:blur(60px); }
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{ animation:none !important; transition-duration:.01ms !important; }
+    .blob{ opacity:.12; }
+    .cglow{ display:none; }
+  }
+
+
+
+
+/* ══ MAATRAM UNIVERSAL NAV ══ */
+#mnav{position:fixed;top:0;left:0;right:0;height:52px;z-index:600;display:flex;align-items:center;gap:5px;
+  padding:0 14px;background:rgba(2,10,8,.82);backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(47,227,143,.15);font-family:'Sora','Inter',system-ui,sans-serif;cursor:auto}
+#mnav *{cursor:pointer}
+#mnav .mn-logo{display:flex;align-items:center;gap:8px;margin-right:10px;text-decoration:none;color:#eafff6}
+#mnav .mn-mark{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#2fe38f,#37b6ff);
+  display:grid;place-items:center;font-weight:800;color:#04120f;font-size:14px}
+#mnav .mn-logo b{font-size:13px;font-weight:700;letter-spacing:.4px}
+#mnav .mn-spacer{flex:1}
+#mnav a.mn-link{font-size:10.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:#7da99b;text-decoration:none;padding:7px 11px;border-radius:100px;transition:all .25s;white-space:nowrap}
+#mnav a.mn-link:hover{color:#eafff6;background:rgba(55,182,255,.1)}
+#mnav a.mn-link.active{color:#04120f;background:linear-gradient(90deg,#2fe38f,#37b6ff)}
+#mnavAuth{display:flex;align-items:center;gap:8px;margin-left:6px}
+#mnavIn{font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#04120f;
+  text-decoration:none;padding:8px 16px;border-radius:100px;background:linear-gradient(90deg,#2fe38f,#37b6ff);white-space:nowrap}
+#mnavChip{display:none;align-items:center;gap:8px;padding:4px 6px;border-radius:100px;
+  border:1px solid rgba(47,227,143,.3);background:rgba(47,227,143,.06);position:relative}
+#mnavChip img{width:28px;height:28px;border-radius:50%;border:1px solid #2fe38f}
+#mnavChip .nm{font-size:12px;font-weight:700;color:#eafff6;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#mnavChip .pt{font-size:10px;font-weight:800;color:#ffd166;letter-spacing:.5px;padding:3px 8px;border-radius:100px;
+  border:1px solid rgba(255,209,102,.35);background:rgba(255,209,102,.08);white-space:nowrap}
+#mnavMenu{display:none;position:absolute;top:44px;right:0;min-width:180px;z-index:700;
+  background:rgba(6,18,14,.97);border:1px solid rgba(47,227,143,.25);border-radius:14px;padding:8px;
+  box-shadow:0 18px 50px -12px rgba(0,0,0,.8)}
+#mnavMenu.open{display:block}
+#mnavMenu button,#mnavMenu a{display:block;width:100%;text-align:left;padding:10px 13px;border-radius:9px;
+  background:transparent;border:none;color:#eafff6;font-family:inherit;font-size:12px;font-weight:600;text-decoration:none;transition:background .2s}
+#mnavMenu button:hover,#mnavMenu a:hover{background:rgba(55,182,255,.12)}
+#mnavMenu .out{color:#ff5d73}
+@media(max-width:860px){#mnav{overflow-x:auto;scrollbar-width:none}#mnav::-webkit-scrollbar{display:none}
+  #mnav .mn-logo b{display:none}#mnavChip .nm{display:none}}
+body{padding-top:52px!important}
+
+</style>
+<script>
+/* stub so feature code can always call it; hosted engine overrides */
+window.maatramAward=window.maatramAward||function(pts,reason){
+  try{const c=+localStorage.getItem('maatram_points')||0;
+      localStorage.setItem('maatram_points',Math.max(0,c+Math.round(pts)));}catch(_){}
+  try{ new BroadcastChannel('maatram').postMessage({type:'points',pts}); }catch(_){}
+  try{ parent.postMessage({maatramRelay:{type:'points',pts}},'*'); }catch(_){}
+};
+</script>
+</head>
+<body>
+<nav id="mnav">
+  <a class="mn-logo" href="index.html"><span class="mn-mark">M</span><b>MAATRAM</b></a>
+  <span class="mn-spacer"></span><a class="mn-link" href="index.html">Home</a><a class="mn-link active" href="timers.html">Timers</a><a class="mn-link" href="app-gate.html">App Gate</a><a class="mn-link" href="study-room.html">Study Room</a><a class="mn-link" href="stats.html">Stats</a><a class="mn-link" href="leaderboard.html">Leaderboard</a><a class="mn-link" href="socials.html">Socials</a>
+  <div id="mnavAuth">
+    <a id="mnavIn" href="login.html">Sign in</a>
+    <div id="mnavChip">
+      <img id="mnavPic" referrerpolicy="no-referrer" alt="">
+      <span class="nm" id="mnavNm"></span>
+      <span class="pt" id="mnavPts">0 PTS</span>
+      <div id="mnavMenu">
+        <a href="leaderboard.html">🏆 My rank</a>
+        <button class="out" id="mnavOut">Sign out</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="amb" aria-hidden="true">
+  <div class="par" id="par1"><div class="blob blob-1" id="blob1"></div></div>
+  <div class="par" id="par2"><div class="blob blob-2" id="blob2"></div></div>
+  <div class="par" id="par3"><div class="blob blob-3" id="blob3"></div></div>
+</div>
+<div class="cglow" id="cglow" aria-hidden="true"></div>
+<div class="grid-fade" aria-hidden="true"></div>
+<div class="vig" aria-hidden="true"></div>
+
+<div class="wrap">
+  <header class="top" data-r>
+    <div>
+      <div class="brand">Maat<i>ram</i></div>
+      <div class="tag">Action ⟹ Value</div>
+    </div>
+    <div class="bank">
+      <div class="bank-n" id="bank">0</div>
+      <div class="bank-l">points</div>
+    </div>
+  </header>
+
+  <div class="modes">
+    <button class="mode" data-mode="pomodoro" aria-pressed="true" data-r>
+      <span class="m-pts">+25</span>
+      <div class="m-name">Pomodoro</div>
+      <div class="m-split">25 / 5</div>
+    </button>
+    <button class="mode" data-mode="deep" aria-pressed="false" data-r>
+      <span class="m-pts">+100</span>
+      <div class="m-name">Deep Work</div>
+      <div class="m-split">90 / 15</div>
+    </button>
+  </div>
+
+  <main class="stage">
+    <div class="phase" data-r><span class="dot" id="dot"></span><span id="phase">Focus</span></div>
+
+    <div class="dial" data-r>
+      <svg viewBox="0 0 240 240" aria-hidden="true">
+        <circle class="track" cx="120" cy="120" r="112" />
+        <circle class="arc" id="arc" cx="120" cy="120" r="112" />
+      </svg>
+      <div class="clock">
+        <div class="time" id="time" role="timer" aria-live="off" aria-label="Time remaining">
+          <span class="slot"></span>
+          <span class="slot"></span>
+          <span class="colon">:</span>
+          <span class="slot"></span>
+          <span class="slot"></span>
+        </div>
+        <div class="sub" id="sub">Session 1</div>
+      </div>
+    </div>
+
+    <div class="ctr" data-r>
+      <button class="btn btn-go" id="go">Start</button>
+      <button class="btn" id="reset">Reset</button>
+    </div>
+
+    <p class="hint" data-r><kbd>Space</kbd> start / pause <span style="opacity:.4">·</span> <kbd>R</kbd> reset</p>
+  </main>
+</div>
+
+<div class="pu" id="pu" role="dialog" aria-modal="true" aria-labelledby="pu-h">
+  <div class="pu-glow" id="pu-glow"></div>
+  <div class="ring"></div><div class="ring"></div><div class="ring"></div>
+  <div class="pu-in">
+    <div class="pu-eye" id="pu-eye">Session complete</div>
+    <h2 class="pu-h" id="pu-h">Power up</h2>
+    <div class="pu-pts" id="pu-pts">+0</div>
+    <p class="pu-sub" id="pu-sub"></p>
+    <div class="pu-act">
+      <button class="btn btn-go" id="pu-break">Take the break</button>
+      <button class="btn" id="pu-skip">Skip</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+/* Motion drives choreography. If the CDN is blocked or you're offline,
+   M stays null and everything renders in its final state. */
+let M = null;
+try {
+  const mod = await import('https://cdn.jsdelivr.net/npm/motion@11.11.13/+esm');
+  if (mod && typeof mod.animate === 'function') M = mod;
+  else console.warn('Motion loaded but animate() is missing — running without choreography.');
+} catch (e) { console.warn('Motion unavailable — running without choreography.'); }
+
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const LIVE    = !!M && !REDUCED;
+const HOVER   = matchMedia('(hover:hover) and (pointer:fine)').matches;
+const EXPO    = [0.16, 1, 0.3, 1];
+
+/* ── Maatram points bridge → leaderboard ── */
+function awardPoints(pts){ window.maatramAward(pts,'Focus session'); }
+const SPRING  = { type:'spring', stiffness:90, damping:20 };
+
+/* Some call shapes (e.g. animating an array of elements) can return
+   controls whose .finished isn't a real promise in every Motion build.
+   Never trust it blindly — always fall back to a resolved promise. */
+function safeFinished(controls) {
+  const f = controls && controls.finished;
+  return (f && typeof f.then === 'function') ? f : Promise.resolve();
+}
+function safeAnimate(...args) {
+  try { return M.animate(...args); }
+  catch (e) { console.warn('Motion animate() failed:', e); return null; }
+}
+
+const $ = id => document.getElementById(id);
+
+const MODES = {
+  pomodoro: { label:'Pomodoro',  focus:25*60, brk:5*60,  pts:25,  accent:'#34D399' },
+  deep:     { label:'Deep Work', focus:90*60, brk:15*60, pts:100, accent:'#4E9BFF' }
+};
+
+const LINES = [
+  'That time was going to pass anyway. You spent it well.',
+  'Nobody saw you do that. It counted regardless.',
+  'Stand up. Find a window. Come back.',
+  'Consistency beats intensity. Again tomorrow.',
+  'Starting was the hard part, and it is behind you.'
+];
+
+const CIRC = 2 * Math.PI * 112;
+const S = { mode:'pomodoro', phase:'focus', left:MODES.pomodoro.focus,
+            running:false, sessions:0, points:0, tick:null };
+
+const el = {
+  time:$('time'), phase:$('phase'), sub:$('sub'), arc:$('arc'), dot:$('dot'),
+  go:$('go'), reset:$('reset'), bank:$('bank'),
+  pu:$('pu'), puPts:$('pu-pts'), puSub:$('pu-sub'), puH:$('pu-h'), puEye:$('pu-eye'),
+  puBreak:$('pu-break'), puSkip:$('pu-skip'), puGlow:$('pu-glow'),
+  cglow:$('cglow')
+};
+
+el.arc.style.strokeDasharray = CIRC;
+const cfg   = () => MODES[S.mode];
+const total = () => S.phase === 'focus' ? cfg().focus : cfg().brk;
+
+/* ============ digit roll ============
+   Invariant: a slot holds at most 2 .d nodes — the outgoing one and the
+   incoming one. Before every change we prune to the LAST node (the one
+   actually visible), so an interrupted roll can never strand a ghost.
+   Removal is driven by three independent paths (finished / rejected /
+   timeout) and .remove() is idempotent, so a node cannot survive them all. */
+const slots = [...el.time.querySelectorAll('.slot')];
+
+const mkD = v => {
+  const s = document.createElement('span');
+  s.className = 'd';
+  s.textContent = v;
+  return s;
+};
+
+function setDigits(str) {
+  slots.forEach((slot, i) => {
+    const v = str[i];
+    if (slot.dataset.v === v) return;
+    const first = slot.dataset.v === undefined;
+    slot.dataset.v = v;
+
+    if (!LIVE || first) { slot.replaceChildren(mkD(v)); return; }
+
+    // prune: keep only the newest node, drop any mid-flight stragglers
+    const ds = [...slot.children];
+    ds.slice(0, -1).forEach(n => n.remove());
+    const cur = ds[ds.length - 1] || null;
+
+    const next = mkD(v);
+    slot.appendChild(next);
+
+    if (cur) {
+      const kill = () => cur.remove();
+      safeFinished(safeAnimate(cur, { transform:['translateY(0%)','translateY(-105%)'], opacity:[1,0] },
+                     { duration:.3, ease:EXPO })).then(kill, kill);
+      setTimeout(kill, 400);                       // belt and braces
+    }
+    safeAnimate(next, { transform:['translateY(105%)','translateY(0%)'], opacity:[0,1] },
+                    { duration:.3, ease:EXPO });
+  });
+}
+
+const mmss = s => String(Math.floor(s/60)).padStart(2,'0') + String(s%60).padStart(2,'0');
+
+/* ============ render ============ */
+function paint() {
+  const d = mmss(S.left);
+  setDigits(d);
+  el.phase.textContent = S.phase === 'focus' ? 'Focus' : 'Break';
+  el.sub.textContent   = 'Session ' + (S.sessions + 1);
+  el.bank.textContent  = S.points;
+  el.arc.style.strokeDashoffset = CIRC * (1 - S.left / total());
+  el.dot.classList.toggle('live', S.running);
+  el.go.textContent = S.running ? 'Pause'
+                    : S.left < total() ? 'Resume'
+                    : S.phase === 'focus' ? 'Start' : 'Start break';
+  document.title = S.running ? `${d.slice(0,2)}:${d.slice(2)} · Maatram` : 'Maatram — Focus';
+}
+
+const accent = () => document.documentElement.style.setProperty('--accent', cfg().accent);
+
+/* ============ pointer-reactive atmosphere ============
+   Lerped toward the cursor every frame, so the light trails behind the
+   pointer instead of snapping to it. Layers move at different depths.
+   Transform-only — never touches filter — so it stays on the compositor. */
+function reactive() {
+  if (!HOVER || REDUCED) return;
+  const p = { x:.5, y:.5, tx:.5, ty:.5 };
+  const layers = [
+    { el:$('par1'), dx:-58, dy:-42 },
+    { el:$('par2'), dx: 76, dy: 54 },
+    { el:$('par3'), dx:-34, dy: 30 }
+  ];
+  let awake = false;
+
+  addEventListener('pointermove', e => {
+    p.tx = e.clientX / innerWidth;
+    p.ty = e.clientY / innerHeight;
+    if (!awake) { awake = true; el.cglow.classList.add('on'); }
+  }, { passive:true });
+
+  const loop = () => {
+    p.x += (p.tx - p.x) * .055;      // trailing lag = the subtle part
+    p.y += (p.ty - p.y) * .055;
+    const ox = p.x - .5, oy = p.y - .5;
+    for (const L of layers)
+      L.el.style.transform = `translate3d(${ox*L.dx}px, ${oy*L.dy}px, 0)`;
+    el.cglow.style.transform = `translate3d(${p.x*innerWidth}px, ${p.y*innerHeight}px, 0)`;
+    requestAnimationFrame(loop);
+  };
+  requestAnimationFrame(loop);
+}
+
+/* ambient drift, independent of the pointer */
+function drift() {
+  if (!LIVE) return;
+  const paths = [
+    ['blob1', ['translate(0px,0px)','translate(44px,32px)','translate(-28px,16px)','translate(0px,0px)'], 26],
+    ['blob2', ['translate(0px,0px)','translate(-36px,-24px)','translate(22px,-12px)','translate(0px,0px)'], 32],
+    ['blob3', ['translate(0px,0px)','translate(26px,-30px)','translate(-18px,20px)','translate(0px,0px)'], 38]
+  ];
+  for (const [id, frames, dur] of paths)
+    safeAnimate($(id), { transform:frames }, { duration:dur, repeat:Infinity, ease:'easeInOut' });
+}
+
+/* card spotlight follows the cursor inside each card */
+function spotlights() {
+  if (!HOVER) return;
+  document.querySelectorAll('.mode').forEach(c => {
+    c.addEventListener('pointermove', e => {
+      const r = c.getBoundingClientRect();
+      c.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+      c.style.setProperty('--my', (e.clientY - r.top)  + 'px');
+    }, { passive:true });
+  });
+}
+
+function enter() {
+  if (!LIVE) return;
+  const items = [...document.querySelectorAll('[data-r]')];
+  items.forEach(n => n.style.opacity = '0');
+  const controls = safeAnimate(items, { opacity:[0,1], transform:['translateY(12px)','translateY(0px)'] },
+            { duration:.62, delay:M.stagger(.045), ease:EXPO });
+  safeFinished(controls).then(() => items.forEach(n => { n.style.transform=''; n.style.opacity=''; }));
+}
+
+function chime() {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    const ctx = new AC();
+    [523.25, 659.25, 783.99].forEach((f, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime + i*.16;
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(.0001, t);
+      g.gain.exponentialRampToValueAtTime(.14, t + .02);
+      g.gain.exponentialRampToValueAtTime(.0001, t + .44);
+      o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + .46);
+    });
+    setTimeout(() => ctx.close(), 1500);
+  } catch (e) {}
+}
+
+/* ============ clock ============ */
+const stop = () => { S.running = false; clearInterval(S.tick); S.tick = null; };
+
+function start() {
+  if (S.running) return;
+  S.running = true;
+  S.tick = setInterval(() => {
+    S.left--;
+    if (S.left <= 0) { S.left = 0; done(); }
+    paint();
+  }, 1000);
+  paint();
+}
+
+function done() {
+  stop(); chime();
+  if (S.phase === 'focus') { S.sessions++; S.points += cfg().pts; awardPoints(cfg().pts); powerup(); }
+  else { S.phase = 'focus'; S.left = cfg().focus; paint(); }
+}
+
+/* ============ power-up ============ */
+function powerup() {
+  const earned = cfg().pts;
+  el.puEye.textContent   = cfg().label + ' complete';
+  el.puH.textContent     = S.sessions === 1 ? 'First one down' : S.sessions + ' sessions today';
+  el.puSub.textContent   = LINES[Math.floor(Math.random() * LINES.length)];
+  el.puBreak.textContent = 'Take the ' + (cfg().brk / 60) + '-minute break';
+  el.puPts.textContent   = '+0';
+  el.pu.classList.add('on');
+
+  if (!LIVE) { el.pu.style.opacity='1'; el.puPts.textContent='+'+earned; el.puBreak.focus(); return; }
+
+  safeAnimate(el.pu, { opacity:[0,1] }, { duration:.4, ease:EXPO });
+  safeAnimate(el.puGlow, { scale:[.4,1], opacity:[0,1] }, { duration:1.1, ease:EXPO });
+
+  document.querySelectorAll('.ring').forEach((r, i) =>
+    safeAnimate(r, { scale:[.5,3.2], opacity:[.55,0] },
+              { duration:2.8, delay:i*.85, repeat:Infinity, ease:'easeOut' }));
+
+  const inner = [...el.pu.querySelectorAll('.pu-eye,.pu-h,.pu-pts,.pu-sub,.pu-act')];
+  const innerControls = safeAnimate(inner, { opacity:[0,1], transform:['translateY(14px)','translateY(0px)'] },
+            { duration:.6, delay:M.stagger(.06, { startDelay:.12 }), ease:EXPO });
+  safeFinished(innerControls).then(() => inner.forEach(n => n.style.transform = ''));
+
+  safeAnimate(0, earned, { duration:1.1, delay:.28, ease:EXPO,
+    onUpdate: v => { el.puPts.textContent = '+' + Math.round(v); } });
+
+  safeAnimate(el.bank, { scale:[1,1.14,1] }, { duration:.6, delay:.9, ease:EXPO });
+  el.puBreak.focus();
+}
+
+function closePU(takeBreak) {
+  const finish = () => {
+    el.pu.classList.remove('on');
+    el.pu.style.opacity = '';
+    S.phase = takeBreak ? 'break' : 'focus';
+    S.left  = takeBreak ? cfg().brk : cfg().focus;
+    paint();
+    if (takeBreak) start();
+    el.go.focus();
+  };
+  if (!LIVE) { finish(); return; }
+  safeFinished(safeAnimate(el.pu, { opacity:[1,0] }, { duration:.32, ease:EXPO })).then(finish);
+}
+
+/* ============ events ============ */
+document.querySelectorAll('.mode').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const next = btn.dataset.mode;
+    if (next === S.mode) return;
+    if (S.running && !confirm('Switch mode? This session is dropped and earns no points.')) return;
+    stop();
+    S.mode = next; S.phase = 'focus'; S.left = cfg().focus;
+    document.querySelectorAll('.mode').forEach(b =>
+      b.setAttribute('aria-pressed', String(b.dataset.mode === next)));
+    accent(); paint();
+    if (LIVE) safeAnimate(btn, { scale:[.98,1] }, SPRING);
+  });
+});
+
+el.go.addEventListener('click',      () => S.running ? (stop(), paint()) : start());
+el.reset.addEventListener('click',   () => { stop(); S.phase = 'focus'; S.left = cfg().focus; paint(); });
+el.puBreak.addEventListener('click', () => closePU(true));
+el.puSkip.addEventListener('click',  () => closePU(false));
+
+addEventListener('keydown', e => {
+  if (el.pu.classList.contains('on')) return;
+  if (e.target.closest('button')) return;
+  if (e.key === ' ') { e.preventDefault(); el.go.click(); }
+  if (e.key.toLowerCase() === 'r') el.reset.click();
+});
+
+addEventListener('beforeunload', e => {
+  if (S.running && S.phase === 'focus') { e.preventDefault(); e.returnValue = ''; }
+});
+
+accent();
+paint();
+enter();
+drift();
+reactive();
+spotlights();
+</script>
+
+<script>
+/* ══ universal nav auth (Firebase session shared across all pages) ══ */
+(async()=>{
+  const chip=document.getElementById('mnavChip'),inBtn=document.getElementById('mnavIn'),
+        menu=document.getElementById('mnavMenu');
+  if(!chip)return;
+  chip.addEventListener('click',e=>{ if(!e.target.closest('#mnavMenu')) menu.classList.toggle('open'); });
+  document.addEventListener('click',e=>{ if(!e.target.closest('#mnavChip')) menu.classList.remove('open'); });
+  if(!(location.protocol==='http:'||location.protocol==='https:'))return;  // file:// → nav stays simple
+  try{
+    const [{initializeApp,getApps,getApp},{getAuth,onAuthStateChanged,signOut},{getFirestore,doc,onSnapshot,runTransaction}]=await Promise.all([
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js')
+    ]);
+    const app=getApps().length?getApp():initializeApp({apiKey:"AIzaSyAjiAm61IkH3wB1tjwOyGRrXAuRMKQyCcQ",authDomain:"maatram-859f4.firebaseapp.com",projectId:"maatram-859f4",storageBucket:"maatram-859f4.firebasestorage.app",messagingSenderId:"770970784123",appId:"1:770970784123:web:7c73c74ddb2179b69dedde"});
+    const auth=getAuth(app),db=getFirestore(app);
+    let unsub=null;
+    /* ══ Maatram points engine (all pages) ══ */
+    let __mtUser=null;
+    window.maatramAward=async function(pts,reason){
+      pts=Math.round(pts); if(!pts) return;
+      /* local bank (works offline / signed-out) */
+      try{
+        const cur=+localStorage.getItem('maatram_points')||0;
+        localStorage.setItem('maatram_points',Math.max(0,cur+pts));
+      }catch(_){}
+      try{ new BroadcastChannel('maatram').postMessage({type:'points',pts}); }catch(_){}
+      try{ parent.postMessage({maatramRelay:{type:'points',pts}},'*'); }catch(_){}
+      mtToast(pts,reason);
+      /* cloud write (clamped to security rules: floor 0, max +200 / −100 per write) */
+      if(__mtUser){
+        const uid=__mtUser.uid;
+        try{
+          await runTransaction(db,async t=>{
+            const r=doc(db,'users',uid);
+            const s=await t.get(r);
+            const cur=(s.exists()&&s.data().points)||0;
+            let nx=cur+pts;
+            nx=Math.max(0,Math.max(cur-100,Math.min(cur+200,nx)));
+            t.set(r,{points:nx},{merge:true});
+          });
+        }catch(e){ console.warn('points write',e); }
+      }
+    };
+    function mtToast(pts,reason){
+      const t=document.createElement('div');
+      t.textContent=(pts>0?'+':'')+pts+' PTS'+(reason?' · '+reason:'');
+      t.style.cssText='position:fixed;top:64px;right:16px;z-index:900;font-family:Sora,Inter,sans-serif;'
+        +'font-weight:800;font-size:13px;letter-spacing:1px;padding:11px 20px;border-radius:100px;'
+        +'backdrop-filter:blur(10px);transition:all .5s cubic-bezier(.2,1.3,.3,1);opacity:0;transform:translateY(-14px);'
+        +(pts>0?'color:#04120f;background:linear-gradient(90deg,#2fe38f,#37b6ff);box-shadow:0 8px 30px -8px rgba(47,227,143,.7);'
+               :'color:#fff;background:linear-gradient(90deg,#ff5d73,#ff9a5d);box-shadow:0 8px 30px -8px rgba(255,93,115,.7);');
+      document.body.appendChild(t);
+      requestAnimationFrame(()=>{t.style.opacity='1';t.style.transform='none';});
+      setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(-14px)';},2600);
+      setTimeout(()=>t.remove(),3200);
+    }
+
+    onAuthStateChanged(auth,u=>{
+      __mtUser=u;
+      if(unsub){unsub();unsub=null;}
+      if(u){
+        inBtn.style.display='none';chip.style.display='flex';
+        document.getElementById('mnavPic').src=u.photoURL||'';
+        document.getElementById('mnavNm').textContent=(u.displayName||'You').split(' ')[0];
+        unsub=onSnapshot(doc(db,'users',u.uid),s=>{
+          document.getElementById('mnavPts').textContent=((s.exists()&&s.data().points)||0)+' PTS';
+        },()=>{});
+      }else{
+        inBtn.style.display='inline-block';chip.style.display='none';
+      }
+    });
+    document.getElementById('mnavOut').onclick=()=>{menu.classList.remove('open');signOut(auth);};
+  }catch(e){console.warn('nav auth',e);}
+})();
+</script>
+</body>
+</html>

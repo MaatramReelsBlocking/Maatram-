@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maatram — Study Room</title>
+<style>
+  :root{
+    --bg:#050e14;--ink:#eafaff;--dim:#7a9fae;
+    --green:#2fe38f;--blue:#37b6ff;
+    --card:rgba(9,26,36,.62);--stroke:rgba(55,182,255,.18);
+    --danger:#ff5d73;--gold:#ffd166;
+    --font-display:'Sora',sans-serif;--font-body:'Inter',system-ui,sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--ink);font-family:var(--font-body);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+  #aurora{position:fixed;inset:0;z-index:0;pointer-events:none}
+  .wrap{position:relative;z-index:2;max-width:1000px;margin:0 auto;padding:44px 22px 90px}
+
+  /* ── header ── */
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:46px;flex-wrap:wrap;gap:12px}
+  .brand{display:flex;align-items:center;gap:13px}
+  .brand-mark{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--green),var(--blue));display:grid;place-items:center;font-family:var(--font-display);font-weight:800;color:#04120f;font-size:21px;box-shadow:0 0 26px rgba(55,182,255,.35)}
+  .brand h1{font-family:var(--font-display);font-size:19px;font-weight:700;letter-spacing:.4px}
+  .brand span{display:block;font-size:11px;color:var(--dim);letter-spacing:2.4px;text-transform:uppercase;font-weight:500}
+  .conn-badge{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;font-weight:600;padding:7px 16px;border-radius:100px;border:1px solid var(--stroke);color:var(--dim);transition:all .4s;display:flex;align-items:center;gap:8px}
+  .conn-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--dim);transition:all .4s;flex-shrink:0}
+  .conn-badge.live{color:var(--green);border-color:rgba(47,227,143,.35);background:rgba(47,227,143,.06)}
+  .conn-badge.live .dot{background:var(--green);box-shadow:0 0 9px var(--green);animation:blink 1.8s infinite}
+  .conn-badge.err{color:var(--danger);border-color:rgba(255,93,115,.3)}
+  .conn-badge.err .dot{background:var(--danger)}
+  @keyframes blink{50%{opacity:.3}}
+
+  /* ── lobby ── */
+  #lobby{text-align:center;padding:70px 20px}
+  #lobby h2{font-family:var(--font-display);font-size:clamp(30px,5vw,50px);font-weight:800;letter-spacing:-1px;line-height:1.08;margin-bottom:12px}
+  #lobby h2 em{font-style:normal;background:linear-gradient(90deg,var(--green),var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent}
+  #lobby p{color:var(--dim);font-size:14px;max-width:460px;margin:0 auto 36px;line-height:1.65}
+  .lobby-form{display:flex;flex-direction:column;align-items:center;gap:14px;max-width:380px;margin:0 auto}
+  .lobby-form input{
+    width:100%;padding:14px 20px;border-radius:14px;font-size:15px;font-family:var(--font-body);
+    border:1px solid var(--stroke);background:rgba(255,255,255,.04);color:var(--ink);outline:none;
+    transition:border-color .3s;
+  }
+  .lobby-form input:focus{border-color:rgba(55,182,255,.5)}
+  .lobby-form input::placeholder{color:var(--dim)}
+  .room-row{display:flex;gap:10px;width:100%}
+  .room-row input{flex:1}
+  .room-row button.gen{
+    padding:14px 16px;border-radius:14px;border:1px solid var(--stroke);
+    background:rgba(255,255,255,.05);color:var(--dim);cursor:pointer;font-size:18px;
+    transition:all .3s;flex-shrink:0;
+  }
+  .room-row button.gen:hover{color:var(--ink);border-color:rgba(55,182,255,.5)}
+  #joinBtn{
+    font-family:var(--font-display);font-weight:800;font-size:14px;letter-spacing:1.4px;text-transform:uppercase;
+    padding:15px 44px;border-radius:100px;border:none;cursor:pointer;color:#04120f;
+    background:linear-gradient(90deg,var(--green),var(--blue));
+    box-shadow:0 10px 30px -10px rgba(47,227,143,.55);
+    transition:transform .3s,box-shadow .3s;width:100%;
+  }
+  #joinBtn:hover{transform:translateY(-2px) scale(1.02)}
+  #joinBtn:active{transform:scale(.97)}
+  #joinBtn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+
+  /* ── room ── */
+  #room{display:none}
+  .room-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:10px}
+  .room-header h2{font-family:var(--font-display);font-size:20px;font-weight:700}
+  .room-header h2 span{font-size:13px;font-weight:500;color:var(--dim);letter-spacing:1px;margin-left:8px;font-family:var(--font-body)}
+  #leaveBtn{font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:9px 22px;border-radius:100px;border:1px solid rgba(255,93,115,.4);color:var(--danger);background:rgba(255,93,115,.06);cursor:pointer;transition:all .3s}
+  #leaveBtn:hover{background:rgba(255,93,115,.14)}
+
+  /* seats */
+  .seats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:28px}
+  @media(max-width:900px){.seats{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:560px){.seats{grid-template-columns:repeat(2,1fr)}}
+  .seat{
+    background:var(--card);border:1px solid var(--stroke);border-radius:22px;
+    padding:24px 12px 20px;text-align:center;backdrop-filter:blur(14px);
+    min-height:190px;transition:border-color .4s,box-shadow .4s;
+    position:relative;overflow:hidden;
+  }
+  .seat.occupied{border-color:rgba(47,227,143,.3);box-shadow:0 0 44px -16px rgba(47,227,143,.25)}
+  .seat.occupied.me{border-color:rgba(55,182,255,.4);box-shadow:0 0 44px -16px rgba(55,182,255,.3)}
+  .seat.empty{opacity:.45}
+  .seat .avatar{font-size:38px;margin-bottom:10px;display:block;transition:transform .5s}
+  .seat.occupied .avatar{animation:breathe 4s ease-in-out infinite}
+  @keyframes breathe{50%{transform:scale(1.12)}}
+  .seat .sname{font-family:var(--font-display);font-weight:700;font-size:14px;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .seat .stime{font-size:12px;color:var(--dim);font-variant-numeric:tabular-nums;margin-bottom:12px;min-height:18px}
+  .seat .sstrikes{display:flex;justify-content:center;gap:8px}
+  .strike-dot{width:20px;height:20px;border-radius:6px;border:1px dashed rgba(255,255,255,.15);display:grid;place-items:center;font-size:10px;color:transparent;transition:all .35s}
+  .strike-dot.hit{border-color:rgba(255,93,115,.55);color:var(--danger);background:rgba(255,93,115,.1);animation:slam .4s cubic-bezier(.2,1.6,.4,1);box-shadow:0 0 14px -2px rgba(255,93,115,.5)}
+  @keyframes slam{0%{transform:scale(2.2);opacity:0}100%{transform:scale(1);opacity:1}}
+  .you-tag{position:absolute;top:10px;right:10px;font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:700;color:var(--blue);background:rgba(55,182,255,.1);border:1px solid rgba(55,182,255,.25);border-radius:6px;padding:3px 8px}
+  .seat .empty-label{font-size:12px;color:var(--dim);margin-top:10px}
+
+  /* log + chat row */
+  .bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:760px){.bottom-row{grid-template-columns:1fr}}
+
+  /* chat */
+  .chat{background:var(--card);border:1px solid var(--stroke);border-radius:18px;backdrop-filter:blur(12px);padding:20px 22px;display:flex;flex-direction:column}
+  .chat h3{font-family:var(--font-display);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:12px}
+  #chatList{list-style:none;display:flex;flex-direction:column;gap:7px;height:160px;overflow-y:auto;margin-bottom:12px}
+  #chatList li{font-size:13px;padding:8px 13px;border-radius:12px;max-width:85%;line-height:1.45;animation:slideIn .3s cubic-bezier(.2,.8,.2,1);word-break:break-word}
+  #chatList li.them{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);align-self:flex-start}
+  #chatList li.mine{background:rgba(55,182,255,.12);border:1px solid rgba(55,182,255,.25);align-self:flex-end}
+  #chatList li b{font-family:var(--font-display);font-size:11px;display:block;margin-bottom:2px;color:var(--green)}
+  #chatList li.mine b{color:var(--blue)}
+  .chat-input{display:flex;gap:8px}
+  .chat-input input{flex:1;padding:11px 16px;border-radius:12px;border:1px solid var(--stroke);background:rgba(255,255,255,.04);color:var(--ink);font-family:var(--font-body);font-size:13px;outline:none;transition:border-color .3s}
+  .chat-input input:focus{border-color:rgba(55,182,255,.5)}
+  .chat-input input::placeholder{color:var(--dim)}
+  .chat-input button{padding:11px 20px;border-radius:12px;border:none;cursor:pointer;font-family:var(--font-display);font-weight:700;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#04120f;background:linear-gradient(90deg,var(--green),var(--blue));transition:transform .25s}
+  .chat-input button:hover{transform:scale(1.05)}
+  .chat-input button:active{transform:scale(.95)}
+
+  /* log */
+  .log{background:var(--card);border:1px solid var(--stroke);border-radius:18px;backdrop-filter:blur(12px);padding:20px 22px}
+  .log h3{font-family:var(--font-display);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:12px}
+  #logList{list-style:none;display:flex;flex-direction:column;gap:7px;max-height:160px;overflow-y:auto}
+  #logList li{font-size:12.5px;padding:9px 14px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);color:var(--dim);animation:slideIn .35s cubic-bezier(.2,.8,.2,1)}
+  #logList li.bad{border-color:rgba(255,93,115,.3);color:#ffb3bd;background:rgba(255,93,115,.05)}
+  #logList li.good{border-color:rgba(47,227,143,.22);color:#b8f5d8;background:rgba(47,227,143,.04)}
+  #logList li time{float:right;opacity:.5;font-variant-numeric:tabular-nums}
+  @keyframes slideIn{from{transform:translateY(-6px);opacity:0}}
+
+  /* kicked */
+  #kicked{position:fixed;inset:0;z-index:50;display:none;place-items:center;background:rgba(5,10,14,.85);backdrop-filter:blur(8px)}
+  #kicked.show{display:grid}
+  #kicked .box{text-align:center;padding:46px 56px;border-radius:26px;background:var(--card);border:1px solid rgba(255,93,115,.4);animation:slam .5s cubic-bezier(.2,1.6,.4,1);max-width:380px}
+  #kicked .box h2{font-family:var(--font-display);font-size:30px;color:var(--danger);margin-bottom:8px}
+  #kicked .box p{color:var(--dim);font-size:13px;margin-bottom:24px;line-height:1.6}
+  #kicked .box button{font-family:var(--font-display);font-weight:700;padding:12px 30px;border-radius:100px;border:1px solid var(--stroke);background:transparent;color:var(--ink);cursor:pointer;transition:all .3s}
+  #kicked .box button:hover{border-color:var(--green);color:var(--green)}
+
+  footer{margin-top:60px;text-align:center;color:var(--dim);font-size:11px;letter-spacing:1.4px}
+  footer b{color:var(--blue);font-weight:600}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+
+
+
+/* ══ MAATRAM UNIVERSAL NAV ══ */
+#mnav{position:fixed;top:0;left:0;right:0;height:52px;z-index:600;display:flex;align-items:center;gap:5px;
+  padding:0 14px;background:rgba(2,10,8,.82);backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(47,227,143,.15);font-family:'Sora','Inter',system-ui,sans-serif;cursor:auto}
+#mnav *{cursor:pointer}
+#mnav .mn-logo{display:flex;align-items:center;gap:8px;margin-right:10px;text-decoration:none;color:#eafff6}
+#mnav .mn-mark{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#2fe38f,#37b6ff);
+  display:grid;place-items:center;font-weight:800;color:#04120f;font-size:14px}
+#mnav .mn-logo b{font-size:13px;font-weight:700;letter-spacing:.4px}
+#mnav .mn-spacer{flex:1}
+#mnav a.mn-link{font-size:10.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:#7da99b;text-decoration:none;padding:7px 11px;border-radius:100px;transition:all .25s;white-space:nowrap}
+#mnav a.mn-link:hover{color:#eafff6;background:rgba(55,182,255,.1)}
+#mnav a.mn-link.active{color:#04120f;background:linear-gradient(90deg,#2fe38f,#37b6ff)}
+#mnavAuth{display:flex;align-items:center;gap:8px;margin-left:6px}
+#mnavIn{font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#04120f;
+  text-decoration:none;padding:8px 16px;border-radius:100px;background:linear-gradient(90deg,#2fe38f,#37b6ff);white-space:nowrap}
+#mnavChip{display:none;align-items:center;gap:8px;padding:4px 6px;border-radius:100px;
+  border:1px solid rgba(47,227,143,.3);background:rgba(47,227,143,.06);position:relative}
+#mnavChip img{width:28px;height:28px;border-radius:50%;border:1px solid #2fe38f}
+#mnavChip .nm{font-size:12px;font-weight:700;color:#eafff6;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#mnavChip .pt{font-size:10px;font-weight:800;color:#ffd166;letter-spacing:.5px;padding:3px 8px;border-radius:100px;
+  border:1px solid rgba(255,209,102,.35);background:rgba(255,209,102,.08);white-space:nowrap}
+#mnavMenu{display:none;position:absolute;top:44px;right:0;min-width:180px;z-index:700;
+  background:rgba(6,18,14,.97);border:1px solid rgba(47,227,143,.25);border-radius:14px;padding:8px;
+  box-shadow:0 18px 50px -12px rgba(0,0,0,.8)}
+#mnavMenu.open{display:block}
+#mnavMenu button,#mnavMenu a{display:block;width:100%;text-align:left;padding:10px 13px;border-radius:9px;
+  background:transparent;border:none;color:#eafff6;font-family:inherit;font-size:12px;font-weight:600;text-decoration:none;transition:background .2s}
+#mnavMenu button:hover,#mnavMenu a:hover{background:rgba(55,182,255,.12)}
+#mnavMenu .out{color:#ff5d73}
+@media(max-width:860px){#mnav{overflow-x:auto;scrollbar-width:none}#mnav::-webkit-scrollbar{display:none}
+  #mnav .mn-logo b{display:none}#mnavChip .nm{display:none}}
+body{padding-top:52px!important}
+
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.3.5/mqtt.min.js"></script>
+<script>
+/* stub so feature code can always call it; hosted engine overrides */
+window.maatramAward=window.maatramAward||function(pts,reason){
+  try{const c=+localStorage.getItem('maatram_points')||0;
+      localStorage.setItem('maatram_points',Math.max(0,c+Math.round(pts)));}catch(_){}
+  try{ new BroadcastChannel('maatram').postMessage({type:'points',pts}); }catch(_){}
+  try{ parent.postMessage({maatramRelay:{type:'points',pts}},'*'); }catch(_){}
+};
+</script>
+</head>
+<body>
+<nav id="mnav">
+  <a class="mn-logo" href="index.html"><span class="mn-mark">M</span><b>MAATRAM</b></a>
+  <span class="mn-spacer"></span><a class="mn-link" href="index.html">Home</a><a class="mn-link" href="timers.html">Timers</a><a class="mn-link" href="app-gate.html">App Gate</a><a class="mn-link active" href="study-room.html">Study Room</a><a class="mn-link" href="stats.html">Stats</a><a class="mn-link" href="leaderboard.html">Leaderboard</a><a class="mn-link" href="socials.html">Socials</a>
+  <div id="mnavAuth">
+    <a id="mnavIn" href="login.html">Sign in</a>
+    <div id="mnavChip">
+      <img id="mnavPic" referrerpolicy="no-referrer" alt="">
+      <span class="nm" id="mnavNm"></span>
+      <span class="pt" id="mnavPts">0 PTS</span>
+      <div id="mnavMenu">
+        <a href="leaderboard.html">🏆 My rank</a>
+        <button class="out" id="mnavOut">Sign out</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<canvas id="aurora"></canvas>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="brand-mark">M</div>
+      <div><h1>Maatram</h1><span>Study Room</span></div>
+    </div>
+    <div class="conn-badge" id="connBadge"><span class="dot"></span><span id="connTxt">Connecting…</span></div>
+  </header>
+
+  <!-- LOBBY -->
+  <div id="lobby">
+    <h2>Study together.<br><em>Distraction-free.</em></h2>
+    <p>Pick a name, share the room code with up to 4 friends, and join. If any of you open a social app on the App Gate, everyone sees the strike in real time.</p>
+    <div class="lobby-form">
+      <input id="nameInput" maxlength="20" placeholder="Your name (e.g. Arjun)" autocomplete="off">
+      <div class="room-row">
+        <input id="codeInput" maxlength="12" placeholder="Room code" autocomplete="off" style="text-transform:uppercase;letter-spacing:2px">
+        <button class="gen" id="genBtn" title="Generate random code">🎲</button>
+      </div>
+      <button id="joinBtn" disabled>Join Room</button>
+    </div>
+  </div>
+
+  <!-- ROOM -->
+  <div id="room">
+    <div class="room-header">
+      <h2>Room <span id="roomCodeDisplay"></span></h2>
+      <button id="leaveBtn">Leave room</button>
+    </div>
+    <div class="seats" id="seats">
+      <div class="seat empty" id="seat0"><span class="avatar">🪑</span><div class="sname" style="color:var(--dim)">Seat 1</div><div class="empty-label">waiting…</div></div>
+      <div class="seat empty" id="seat1"><span class="avatar">🪑</span><div class="sname" style="color:var(--dim)">Seat 2</div><div class="empty-label">waiting…</div></div>
+      <div class="seat empty" id="seat2"><span class="avatar">🪑</span><div class="sname" style="color:var(--dim)">Seat 3</div><div class="empty-label">waiting…</div></div>
+      <div class="seat empty" id="seat3"><span class="avatar">🪑</span><div class="sname" style="color:var(--dim)">Seat 4</div><div class="empty-label">waiting…</div></div>
+      <div class="seat empty" id="seat4"><span class="avatar">🪑</span><div class="sname" style="color:var(--dim)">Seat 5</div><div class="empty-label">waiting…</div></div>
+    </div>
+    <div class="bottom-row">
+      <div class="log">
+        <h3>Room activity</h3>
+        <ul id="logList"></ul>
+      </div>
+      <div class="chat">
+        <h3>Room chat</h3>
+        <ul id="chatList"></ul>
+        <div class="chat-input">
+          <input id="chatInput" maxlength="200" placeholder="Say something… (e.g. 'eyes on the book!')" autocomplete="off">
+          <button id="chatSend">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>MAATRAM · <b>Action ⟹ Value</b> · Built by Team Maatram, SSVM School of Excellence</footer>
+</div>
+
+<div id="kicked">
+  <div class="box">
+    <h2>Struck out. 🚫</h2>
+    <p>Three social opens during your session. The room has ended your seat. Take a breath and come back focused.</p>
+    <button id="kickedOk">Back to lobby</button>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════ */
+const $=id=>document.getElementById(id);
+const avatars=['🧑‍💻','👩‍💻','🧑‍🎓','👨‍🎓','🧑‍🔬','👩‍🔬'];
+function randAvatar(){return avatars[Math.floor(Math.random()*avatars.length)]}
+function nowStr(){const d=new Date();return d.toTimeString().slice(0,5)}
+function fmtSec(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function randCode(){return Math.random().toString(36).slice(2,8).toUpperCase()}
+
+/* ═══════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════ */
+let myId=null, myName='', myAvatar='', roomCode='', inRoom=false;
+let peers={};        // id -> {name,avatar,strikes,joinedAt}
+let myStrikes=0, myStart=0, clockTick=null;
+let wsReady=false;
+function myElapsed(){return myStart?Math.floor((Date.now()-myStart)/1000):0}
+
+
+/* ═══════════════════════════════════════════════
+   SYNC — public MQTT broker over WebSocket
+═══════════════════════════════════════════════ */
+let client=null;
+const BROKERS=['wss://broker.emqx.io:8084/mqtt','wss://test.mosquitto.org:8081'];
+let brokerIdx=0;
+const topicFor=code=>'maatram/room/'+code;
+
+function connect(code){
+  roomCode=code;
+  if(client){ try{client.end(true)}catch(_){}}
+  setBadge('','Connecting…');
+  client=mqtt.connect(BROKERS[brokerIdx],{clientId:'maatram_'+myId,keepalive:30,reconnectPeriod:0,connectTimeout:8000});
+  client.on('connect',()=>{
+    wsReady=true; setBadge('live','Connected');
+    client.subscribe(topicFor(code),()=>{ 
+      if(inRoom) sendMsg({type:'hello',name:myName,avatar:myAvatar,strikes:myStrikes,elapsed:myElapsed()});
+    });
+  });
+  client.on('message',(t,payload)=>{ try{ onMsg(JSON.parse(payload.toString())); }catch(_){} });
+  const fail=()=>{ 
+    wsReady=false;
+    if(!inRoom) return;
+    brokerIdx=(brokerIdx+1)%BROKERS.length;
+    setBadge('err','Reconnecting…');
+    setTimeout(()=>{ if(inRoom) connect(roomCode); },2500);
+  };
+  client.on('close',fail); client.on('error',()=>{});
+}
+
+function sendMsg(obj){
+  obj._id=myId;
+  if(client && client.connected) client.publish(topicFor(roomCode),JSON.stringify(obj));
+}
+
+function onMsg(d){
+  if(!d || !d._id) return;
+  const them=d._id;
+  if(them===myId) return;           // own echo — ignore
+
+  if(d.type==='hello'){
+    const isNew=!peers[them];
+    peers[them]={name:d.name,avatar:d.avatar,strikes:d.strikes||0,lastSeen:Date.now(),startAt:Date.now()-(d.elapsed||0)*1000,distracted:(d.strikes||0)>0};
+    renderSeats();
+    if(isNew){
+      addLog(`${d.name} joined the room.`,'good');
+      spawnRipple(Math.random()*innerWidth,Math.random()*innerHeight,'good');
+      sendMsg({type:'hello',name:myName,avatar:myAvatar,strikes:myStrikes,elapsed:myElapsed()});
+    }
+  } else if(d.type==='bye'){
+    const name=peers[them]?.name||'Someone';
+    delete peers[them]; renderSeats();
+    addLog(`${name} left the room.`);
+    spawnRipple(Math.random()*innerWidth,Math.random()*innerHeight);
+  } else if(d.type==='strike'){
+    if(peers[them]){
+      peers[them].strikes=(peers[them].strikes||0)+1;
+      peers[them].lastSeen=Date.now();
+      renderSeats();
+      if(!peers[them].distracted){ peers[them].distracted=true; addLog(`👀 ${peers[them].name} got distracted for the first time!`,'bad'); }
+      addLog(`⚡ Strike ${peers[them].strikes}/3 — ${peers[them].name} opened ${d.app} on App Gate.`,'bad');
+      spawnRipple(Math.random()*innerWidth,Math.random()*innerHeight,'bad');
+    }
+  } else if(d.type==='chat'){
+    if(peers[them]){ peers[them].lastSeen=Date.now(); addChat(peers[them].name, d.text, false); }
+  } else if(d.type==='ping'){
+    if(peers[them]){ peers[them].lastSeen=Date.now(); if(typeof d.elapsed==='number') peers[them].startAt=Date.now()-d.elapsed*1000; }
+    else { sendMsg({type:'hello',name:myName,avatar:myAvatar,strikes:myStrikes,elapsed:myElapsed()}); } // unknown peer — introduce ourselves so they re-hello
+  }
+}
+
+/* prune peers that stopped pinging (closed tab without 'bye') */
+setInterval(()=>{
+  if(!inRoom) return;
+  let changed=false;
+  for(const [id,p] of Object.entries(peers)){
+    if(Date.now()-(p.lastSeen||0)>12000){ addLog(`${p.name} timed out.`); delete peers[id]; changed=true; }
+  }
+  if(changed) renderSeats();
+},4000);
+
+/* ═══════════════════════════════════════════════
+   LOBBY UI
+═══════════════════════════════════════════════ */
+$('genBtn').onclick=()=>{ $('codeInput').value=randCode(); checkReady(); };
+$('nameInput').oninput=checkReady;
+$('codeInput').oninput=()=>{ $('codeInput').value=$('codeInput').value.toUpperCase(); checkReady(); };
+function checkReady(){
+  $('joinBtn').disabled=!($('nameInput').value.trim() && $('codeInput').value.trim().length>=4);
+}
+
+// pre-fill a code
+$('codeInput').value=randCode();
+checkReady();
+
+$('joinBtn').onclick=()=>{
+  myName=$('nameInput').value.trim()||'Anon';
+  myAvatar=randAvatar();
+  myId=Math.random().toString(36).slice(2);
+  const code=$('codeInput').value.trim().toUpperCase();
+  joinRoom(code);
+};
+
+/* ═══════════════════════════════════════════════
+   ROOM JOIN / LEAVE
+═══════════════════════════════════════════════ */
+let focusBonusTimer=null;
+function joinRoom(code){
+  inRoom=true; myStrikes=0; myStart=Date.now(); peers={};
+  clearTimeout(focusBonusTimer);
+  focusBonusTimer=setTimeout(()=>{ if(inRoom) window.maatramAward(20,'15 min in the room'); },15*60*1000);
+  $('lobby').style.display='none';
+  $('room').style.display='block';
+  $('roomCodeDisplay').textContent=code;
+  addLog(`You joined as ${myName}.`,'good');
+  renderSeats();
+  connect(code);
+  clockTick=setInterval(()=>{ renderTimes(); if((Date.now()/1000|0)%3===0) sendMsg({type:'ping',elapsed:myElapsed()}); },1000);
+  spawnRipple(innerWidth/2,innerHeight/2,'good');
+}
+
+function leaveRoom(kicked=false){
+  if(!inRoom) return;
+  inRoom=false;
+  clearTimeout(focusBonusTimer);
+  if(kicked) window.maatramAward(-30,'Struck out');
+  sendMsg({type:'bye',name:myName});
+  clearInterval(clockTick); clockTick=null;
+  peers={};
+  if(client){try{client.end(true)}catch(_){} client=null;}
+  setBadge('','Idle');
+  $('room').style.display='none';
+  $('lobby').style.display='block';
+  if(!kicked) addLog(`You left. Session: ${fmtSec(Math.floor((Date.now()-myStart)/1000))}`);
+}
+
+$('leaveBtn').onclick=()=>leaveRoom();
+$('kickedOk').onclick=()=>{ $('kicked').classList.remove('show'); leaveRoom(true); };
+
+/* ═══════════════════════════════════════════════
+   SEATS RENDER
+═══════════════════════════════════════════════ */
+const SEAT_IDS=['seat0','seat1','seat2','seat3','seat4'];
+function renderSeats(){
+  const all=[{id:myId,name:myName,avatar:myAvatar,strikes:myStrikes,me:true,joinedAt:myStart},
+             ...Object.entries(peers).map(([id,p])=>({id,...p,me:false}))].slice(0,5);
+  SEAT_IDS.forEach((sid,i)=>{
+    const seat=$(sid); const p=all[i];
+    if(!p){
+      seat.className='seat empty';
+      seat.innerHTML=`<span class="avatar">🪑</span><div class="sname" style="color:var(--dim)">Seat ${i+1}</div><div class="empty-label">waiting…</div>`;
+      return;
+    }
+    seat.className='seat occupied'+(p.me?' me':'');
+    seat.innerHTML=`
+      ${p.me?'<div class="you-tag">You</div>':''}
+      <span class="avatar">${p.avatar}</span>
+      <div class="sname">${escHtml(p.name)}</div>
+      <div class="stime" id="stime_${p.id}">${fmtSec(Math.floor((Date.now()-(p.me?myStart:p.startAt||Date.now()))/1000))}</div>
+      <div class="sstrikes">${[0,1,2].map(n=>`<div class="strike-dot${n<p.strikes?' hit':''}">✕</div>`).join('')}</div>
+    `;
+  });
+}
+function renderTimes(){
+  if(myStart){ const el=document.getElementById('stime_'+myId); if(el) el.textContent=fmtSec(myElapsed()); }
+  for(const [id,p] of Object.entries(peers)){
+    const el=document.getElementById('stime_'+id);
+    if(el && p.startAt) el.textContent=fmtSec(Math.max(0,Math.floor((Date.now()-p.startAt)/1000)));
+  }
+}
+
+function escHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+/* ═══════════════════════════════════════════════
+   LOG
+═══════════════════════════════════════════════ */
+const logList=$('logList');
+function addLog(text,cls){
+  const li=document.createElement('li'); if(cls)li.className=cls;
+  li.innerHTML=escHtml(text)+' <time>'+nowStr()+'</time>';
+  logList.prepend(li);
+  if(logList.children.length>40) logList.removeChild(logList.lastChild);
+}
+
+/* ═══════════════════════════════════════════════
+   STRIKE (from App Gate sync via localStorage + BroadcastChannel)
+═══════════════════════════════════════════════ */
+const store=(()=>{try{localStorage.setItem('_t','1');localStorage.removeItem('_t');return{get:k=>localStorage.getItem(k),set:(k,v)=>localStorage.setItem(k,v),del:k=>localStorage.removeItem(k)};}catch(e){const m={};return{get:k=>m[k]??null,set:(k,v)=>m[k]=v,del:k=>delete m[k]};}})();
+let lastSocialTs=+store.get('maatram_social_seen')||0;
+
+function handleStrikeEvent(app){
+  if(!inRoom) return;
+  const first=myStrikes===0;
+  myStrikes++;
+  sendMsg({type:'strike',app});
+  if(first) addLog('👀 You got distracted for the first time!','bad');
+  renderSeats();
+  addLog(`⚡ Strike ${myStrikes}/3 — you opened ${app} on App Gate.`,'bad');
+  spawnRipple(innerWidth*.5,innerHeight*.5,'bad');
+  if(myStrikes>=3){ $('kicked').classList.add('show'); }
+}
+
+try{
+  const bc=new BroadcastChannel('maatram');
+  bc.onmessage=e=>{ if(e.data?.type==='social_open'&&e.data.ts>lastSocialTs){lastSocialTs=e.data.ts;store.set('maatram_social_seen',lastSocialTs);handleStrikeEvent(e.data.app);} };
+}catch(_){}
+addEventListener('storage',e=>{ if(e.key==='maatram_social_open') checkStored(); });
+/* all-in-one: strikes relayed by the shell (works even when storage is sandboxed) */
+addEventListener('message',e=>{
+  const r=e.data&&e.data.maatramRelay;
+  if(r&&r.type==='social_open'&&r.ts>lastSocialTs){lastSocialTs=r.ts;handleStrikeEvent(r.app);}
+});
+setInterval(checkStored,1500);
+function checkStored(){try{const raw=store.get('maatram_social_open');if(!raw)return;const ev=JSON.parse(raw);if(ev.ts>lastSocialTs){lastSocialTs=ev.ts;store.set('maatram_social_seen',lastSocialTs);handleStrikeEvent(ev.app);}}catch(_){}}
+
+/* ═══════════════════════════════════════════════
+   CHAT
+═══════════════════════════════════════════════ */
+const chatList=$('chatList'), chatInput=$('chatInput');
+function addChat(name,text,mine){
+  const li=document.createElement('li');
+  li.className=mine?'mine':'them';
+  li.innerHTML='<b>'+escHtml(name)+'</b>'+escHtml(text);
+  chatList.appendChild(li);
+  chatList.scrollTop=chatList.scrollHeight;
+  if(chatList.children.length>60) chatList.removeChild(chatList.firstChild);
+}
+function sendChat(){
+  const text=chatInput.value.trim();
+  if(!text || !inRoom) return;
+  chatInput.value='';
+  sendMsg({type:'chat',text});
+  addChat(myName,text,true);
+}
+$('chatSend').onclick=sendChat;
+chatInput.addEventListener('keydown',e=>{ if(e.key==='Enter') sendChat(); });
+
+/* ═══════════════════════════════════════════════
+   STATUS BADGE
+═══════════════════════════════════════════════ */
+function setBadge(cls,txt){ const b=$('connBadge');b.className='conn-badge '+cls;$('connTxt').textContent=txt; }
+setBadge('','Connecting…');
+
+/* ═══════════════════════════════════════════════
+   BACKGROUND: aurora ribbons + ripples
+═══════════════════════════════════════════════ */
+const cv=$('aurora'),ctx=cv.getContext('2d');
+let W,H,DPR;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;cv.style.width=W+'px';cv.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0);}
+resize();addEventListener('resize',resize);
+const mouse={x:innerWidth/2,y:innerHeight/2};
+addEventListener('pointermove',e=>{mouse.x=e.clientX;mouse.y=e.clientY});
+let ripples=[];
+function spawnRipple(x,y,kind){ripples.push({x,y,r:0,kind,life:1});}
+addEventListener('pointerdown',e=>{if(!e.target.closest('button,input,a'))spawnRipple(e.clientX,e.clientY);});
+const ribbons=[{base:.28,amp:50,speed:.00038,phase:0,hue:158,alpha:.10},{base:.52,amp:64,speed:.00027,phase:2.1,hue:200,alpha:.09},{base:.76,amp:42,speed:.00048,phase:4.4,hue:178,alpha:.08}];
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function frame(t){
+  ctx.clearRect(0,0,W,H);
+  const active=inRoom;
+  for(const rb of ribbons){
+    const hue=active?rb.hue:rb.hue-8;
+    const g=ctx.createLinearGradient(0,0,W,0);
+    g.addColorStop(0,`hsla(${hue},80%,55%,0)`);
+    g.addColorStop(.5,`hsla(${hue},85%,58%,${rb.alpha*(active?1.7:1)})`);
+    g.addColorStop(1,`hsla(${hue+30},80%,55%,0)`);
+    ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(0,H);
+    for(let x=0;x<=W;x+=7){
+      const att=Math.exp(-Math.pow((x-mouse.x)/250,2));
+      const pull=(mouse.y-H*rb.base)*att*.22;
+      const y=H*rb.base+Math.sin(x*.006+t*rb.speed*4+rb.phase)*rb.amp+Math.sin(x*.013-t*rb.speed*7+rb.phase*2)*rb.amp*.4+pull;
+      ctx.lineTo(x,y);
+    }
+    ctx.lineTo(W,H);ctx.closePath();ctx.fill();
+    ctx.strokeStyle=`hsla(${hue},90%,65%,${rb.alpha*2.4})`;ctx.lineWidth=1.3;ctx.beginPath();
+    for(let x=0;x<=W;x+=7){
+      const att=Math.exp(-Math.pow((x-mouse.x)/250,2));
+      const pull=(mouse.y-H*rb.base)*att*.22;
+      const y=H*rb.base+Math.sin(x*.006+t*rb.speed*4+rb.phase)*rb.amp+Math.sin(x*.013-t*rb.speed*7+rb.phase*2)*rb.amp*.4+pull;
+      x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+  }
+  for(let i=0;i<12;i++){const seed=i*93.7;const y=H-((t*.018+seed*44)%(H+40));const x=(Math.sin(seed)+1)/2*W+Math.sin(t*.0006+seed)*28;ctx.beginPath();ctx.fillStyle=`hsla(${i%2?158:200},85%,65%,${.1+.08*Math.sin(t*.002+seed)})`;ctx.arc(x,y,1.5,0,Math.PI*2);ctx.fill();}
+  ripples=ripples.filter(r=>r.life>0);
+  for(const r of ripples){r.r+=3;r.life-=.014;const col=r.kind==='bad'?`rgba(255,93,115,${r.life*.5})`:r.kind==='good'?`rgba(47,227,143,${r.life*.5})`:`rgba(55,182,255,${r.life*.38})`;ctx.strokeStyle=col;ctx.lineWidth=1.7;ctx.beginPath();ctx.arc(r.x,r.y,r.r,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(r.x,r.y,r.r*.55,0,Math.PI*2);ctx.strokeStyle=col.replace(/[\d.]+\)$/,r.life*.22+')');ctx.stroke();}
+  if(!reduced)requestAnimationFrame(frame);
+}
+if(!reduced)requestAnimationFrame(frame);else frame(0);
+</script>
+
+<script>
+/* ══ universal nav auth (Firebase session shared across all pages) ══ */
+(async()=>{
+  const chip=document.getElementById('mnavChip'),inBtn=document.getElementById('mnavIn'),
+        menu=document.getElementById('mnavMenu');
+  if(!chip)return;
+  chip.addEventListener('click',e=>{ if(!e.target.closest('#mnavMenu')) menu.classList.toggle('open'); });
+  document.addEventListener('click',e=>{ if(!e.target.closest('#mnavChip')) menu.classList.remove('open'); });
+  if(!(location.protocol==='http:'||location.protocol==='https:'))return;  // file:// → nav stays simple
+  try{
+    const [{initializeApp,getApps,getApp},{getAuth,onAuthStateChanged,signOut},{getFirestore,doc,onSnapshot,runTransaction}]=await Promise.all([
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js')
+    ]);
+    const app=getApps().length?getApp():initializeApp({apiKey:"AIzaSyAjiAm61IkH3wB1tjwOyGRrXAuRMKQyCcQ",authDomain:"maatram-859f4.firebaseapp.com",projectId:"maatram-859f4",storageBucket:"maatram-859f4.firebasestorage.app",messagingSenderId:"770970784123",appId:"1:770970784123:web:7c73c74ddb2179b69dedde"});
+    const auth=getAuth(app),db=getFirestore(app);
+    let unsub=null;
+    /* ══ Maatram points engine (all pages) ══ */
+    let __mtUser=null;
+    window.maatramAward=async function(pts,reason){
+      pts=Math.round(pts); if(!pts) return;
+      /* local bank (works offline / signed-out) */
+      try{
+        const cur=+localStorage.getItem('maatram_points')||0;
+        localStorage.setItem('maatram_points',Math.max(0,cur+pts));
+      }catch(_){}
+      try{ new BroadcastChannel('maatram').postMessage({type:'points',pts}); }catch(_){}
+      try{ parent.postMessage({maatramRelay:{type:'points',pts}},'*'); }catch(_){}
+      mtToast(pts,reason);
+      /* cloud write (clamped to security rules: floor 0, max +200 / −100 per write) */
+      if(__mtUser){
+        const uid=__mtUser.uid;
+        try{
+          await runTransaction(db,async t=>{
+            const r=doc(db,'users',uid);
+            const s=await t.get(r);
+            const cur=(s.exists()&&s.data().points)||0;
+            let nx=cur+pts;
+            nx=Math.max(0,Math.max(cur-100,Math.min(cur+200,nx)));
+            t.set(r,{points:nx},{merge:true});
+          });
+        }catch(e){ console.warn('points write',e); }
+      }
+    };
+    function mtToast(pts,reason){
+      const t=document.createElement('div');
+      t.textContent=(pts>0?'+':'')+pts+' PTS'+(reason?' · '+reason:'');
+      t.style.cssText='position:fixed;top:64px;right:16px;z-index:900;font-family:Sora,Inter,sans-serif;'
+        +'font-weight:800;font-size:13px;letter-spacing:1px;padding:11px 20px;border-radius:100px;'
+        +'backdrop-filter:blur(10px);transition:all .5s cubic-bezier(.2,1.3,.3,1);opacity:0;transform:translateY(-14px);'
+        +(pts>0?'color:#04120f;background:linear-gradient(90deg,#2fe38f,#37b6ff);box-shadow:0 8px 30px -8px rgba(47,227,143,.7);'
+               :'color:#fff;background:linear-gradient(90deg,#ff5d73,#ff9a5d);box-shadow:0 8px 30px -8px rgba(255,93,115,.7);');
+      document.body.appendChild(t);
+      requestAnimationFrame(()=>{t.style.opacity='1';t.style.transform='none';});
+      setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(-14px)';},2600);
+      setTimeout(()=>t.remove(),3200);
+    }
+
+    onAuthStateChanged(auth,u=>{
+      __mtUser=u;
+      if(unsub){unsub();unsub=null;}
+      if(u){
+        inBtn.style.display='none';chip.style.display='flex';
+        document.getElementById('mnavPic').src=u.photoURL||'';
+        document.getElementById('mnavNm').textContent=(u.displayName||'You').split(' ')[0];
+        unsub=onSnapshot(doc(db,'users',u.uid),s=>{
+          document.getElementById('mnavPts').textContent=((s.exists()&&s.data().points)||0)+' PTS';
+        },()=>{});
+      }else{
+        inBtn.style.display='inline-block';chip.style.display='none';
+      }
+    });
+    document.getElementById('mnavOut').onclick=()=>{menu.classList.remove('open');signOut(auth);};
+  }catch(e){console.warn('nav auth',e);}
+})();
+</script>
+</body>
+</html>

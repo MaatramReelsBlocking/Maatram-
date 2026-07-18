@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maatram — Leaderboard</title>
+<style>
+  :root{--ink:#eafff6;--dim:#7da99b;--green:#2fe38f;--blue:#37b6ff;--gold:#ffd166;--silver:#cfd8dc;--bronze:#e0a06a;--pink:#ff6ec7;
+    --card:rgba(12,28,24,.72);--stroke:rgba(47,227,143,.16);
+    --font-display:'Sora',sans-serif;--font-body:'Inter',system-ui,sans-serif}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#000;color:var(--ink);font-family:var(--font-body);min-height:100vh;-webkit-font-smoothing:antialiased}
+  #bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+  .wrap{position:relative;z-index:2;max-width:820px;margin:0 auto;padding:42px 18px 90px}
+
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:38px;flex-wrap:wrap;gap:12px}
+  .brand{display:flex;align-items:center;gap:13px}
+  .brand-mark{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--green),var(--blue));display:grid;place-items:center;font-family:var(--font-display);font-weight:800;color:#04120f;font-size:21px}
+  .brand h1{font-family:var(--font-display);font-size:19px;font-weight:700}
+  .brand span{display:block;font-size:11px;color:var(--dim);letter-spacing:2.4px;text-transform:uppercase;font-weight:500}
+  .mode-pill{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;font-weight:700;padding:8px 16px;border-radius:100px;border:1px solid var(--stroke);color:var(--dim)}
+
+  .hero{text-align:center;margin-bottom:40px}
+  .hero h2{font-family:var(--font-display);font-weight:900;font-size:clamp(30px,6vw,52px);letter-spacing:1px;
+    text-shadow:0 0 22px rgba(47,227,143,.7),0 0 60px rgba(55,182,255,.35)}
+  .hero p{color:var(--dim);font-size:13px;letter-spacing:1.5px;text-transform:uppercase;margin-top:6px}
+
+  /* join card (local mode) */
+  .join{max-width:420px;margin:0 auto 34px;background:var(--card);border:1px solid var(--stroke);
+    border-radius:20px;backdrop-filter:blur(12px);padding:22px 22px;display:flex;gap:10px}
+  .join input{flex:1;padding:13px 18px;border-radius:12px;border:1px solid var(--stroke);
+    background:rgba(255,255,255,.04);color:var(--ink);font-family:var(--font-body);font-size:14px;outline:none;transition:border-color .3s}
+  .join input:focus{border-color:rgba(55,182,255,.5)}
+  .join input::placeholder{color:var(--dim)}
+  .join button{padding:13px 24px;border-radius:12px;border:none;cursor:pointer;
+    font-family:var(--font-display);font-weight:800;font-size:12px;letter-spacing:1.4px;text-transform:uppercase;
+    color:#04120f;background:linear-gradient(90deg,var(--green),var(--blue));transition:transform .25s}
+  .join button:hover{transform:scale(1.04)}
+  .join button:active{transform:scale(.96)}
+
+  /* podium */
+  .podium{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:end;margin-bottom:26px}
+  .pod{text-align:center;border-radius:20px 20px 8px 8px;padding:18px 8px 14px;position:relative;
+    background:var(--card);border:1px solid var(--stroke);backdrop-filter:blur(12px);
+    opacity:0;transform:translateY(40px);transition:all .8s cubic-bezier(.2,1.25,.3,1)}
+  .pod.in{opacity:1;transform:none}
+  .pod .crown{font-size:22px;position:absolute;top:-14px;left:50%;transform:translateX(-50%)}
+  .pod .face{width:56px;height:56px;border-radius:50%;margin:0 auto 8px;display:grid;place-items:center;
+    font-family:var(--font-display);font-weight:800;font-size:22px;color:#04120f;
+    background:linear-gradient(135deg,var(--green),var(--blue));border:2px solid var(--stroke)}
+  .pod .nm{font-family:var(--font-display);font-weight:700;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 4px}
+  .pod .pt{font-family:var(--font-display);font-weight:800;font-size:17px;margin-top:3px}
+  .pod.p1{order:2;padding-top:26px;padding-bottom:34px;border-color:rgba(255,209,102,.5);box-shadow:0 0 44px -14px rgba(255,209,102,.45)}
+  .pod.p1 .face{width:72px;height:72px;font-size:28px;border-color:var(--gold);box-shadow:0 0 24px rgba(255,209,102,.6)}
+  .pod.p1 .pt{color:var(--gold)}
+  .pod.p2{order:1;border-color:rgba(207,216,220,.35)}.pod.p2 .pt{color:var(--silver)}
+  .pod.p3{order:3;border-color:rgba(224,160,106,.35)}.pod.p3 .pt{color:var(--bronze)}
+
+  /* list */
+  .list{display:flex;flex-direction:column;gap:10px}
+  .rowu{display:grid;grid-template-columns:44px 44px 1fr auto;align-items:center;gap:12px;
+    background:var(--card);border:1px solid var(--stroke);border-radius:16px;padding:12px 16px;
+    backdrop-filter:blur(10px);opacity:0;transform:translateX(-26px);
+    transition:opacity .6s cubic-bezier(.2,1,.3,1),transform .6s cubic-bezier(.2,1,.3,1)}
+  .rowu.in{opacity:1;transform:none}
+  .rowu.me{border-color:rgba(55,182,255,.55);background:rgba(55,182,255,.07)}
+  .rk{font-family:var(--font-display);font-weight:800;font-size:16px;color:var(--dim);text-align:center}
+  .face-s{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+    font-family:var(--font-display);font-weight:800;font-size:15px;color:#04120f;
+    background:linear-gradient(135deg,var(--green),var(--blue))}
+  .rowu .nm{font-family:var(--font-display);font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .rowu .nm span{display:block;font-family:var(--font-body);font-weight:400;font-size:10.5px;color:var(--dim)}
+  .pts{font-family:var(--font-display);font-weight:800;font-size:16px;
+    background:linear-gradient(90deg,var(--green),var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent;
+    font-variant-numeric:tabular-nums}
+
+  #empty{text-align:center;padding:60px 20px;border:1.5px dashed rgba(47,227,143,.3);border-radius:22px;display:none}
+  #empty .big{font-size:44px;margin-bottom:14px}
+  #empty b{font-family:var(--font-display);font-size:18px;display:block;margin-bottom:6px}
+  #empty p{color:var(--dim);font-size:13px;line-height:1.6;max-width:340px;margin:0 auto}
+
+  footer{margin-top:56px;text-align:center;color:var(--dim);font-size:11px;letter-spacing:1.4px}
+  footer b{color:var(--green)}
+  @media(max-width:560px){.podium{gap:8px}.pod .nm{font-size:11px}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+
+/* ══ MAATRAM UNIVERSAL NAV ══ */
+#mnav{position:fixed;top:0;left:0;right:0;height:52px;z-index:600;display:flex;align-items:center;gap:5px;
+  padding:0 14px;background:rgba(2,10,8,.82);backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(47,227,143,.15);font-family:'Sora','Inter',system-ui,sans-serif;cursor:auto}
+#mnav *{cursor:pointer}
+#mnav .mn-logo{display:flex;align-items:center;gap:8px;margin-right:10px;text-decoration:none;color:#eafff6}
+#mnav .mn-mark{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#2fe38f,#37b6ff);
+  display:grid;place-items:center;font-weight:800;color:#04120f;font-size:14px}
+#mnav .mn-logo b{font-size:13px;font-weight:700;letter-spacing:.4px}
+#mnav .mn-spacer{flex:1}
+#mnav a.mn-link{font-size:10.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:#7da99b;text-decoration:none;padding:7px 11px;border-radius:100px;transition:all .25s;white-space:nowrap}
+#mnav a.mn-link:hover{color:#eafff6;background:rgba(55,182,255,.1)}
+#mnav a.mn-link.active{color:#04120f;background:linear-gradient(90deg,#2fe38f,#37b6ff)}
+#mnavAuth{display:flex;align-items:center;gap:8px;margin-left:6px}
+#mnavIn{font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#04120f;
+  text-decoration:none;padding:8px 16px;border-radius:100px;background:linear-gradient(90deg,#2fe38f,#37b6ff);white-space:nowrap}
+#mnavChip{display:none;align-items:center;gap:8px;padding:4px 6px;border-radius:100px;
+  border:1px solid rgba(47,227,143,.3);background:rgba(47,227,143,.06);position:relative}
+#mnavChip img{width:28px;height:28px;border-radius:50%;border:1px solid #2fe38f}
+#mnavChip .nm{font-size:12px;font-weight:700;color:#eafff6;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#mnavChip .pt{font-size:10px;font-weight:800;color:#ffd166;letter-spacing:.5px;padding:3px 8px;border-radius:100px;
+  border:1px solid rgba(255,209,102,.35);background:rgba(255,209,102,.08);white-space:nowrap}
+#mnavMenu{display:none;position:absolute;top:44px;right:0;min-width:180px;z-index:700;
+  background:rgba(6,18,14,.97);border:1px solid rgba(47,227,143,.25);border-radius:14px;padding:8px;
+  box-shadow:0 18px 50px -12px rgba(0,0,0,.8)}
+#mnavMenu.open{display:block}
+#mnavMenu button,#mnavMenu a{display:block;width:100%;text-align:left;padding:10px 13px;border-radius:9px;
+  background:transparent;border:none;color:#eafff6;font-family:inherit;font-size:12px;font-weight:600;text-decoration:none;transition:background .2s}
+#mnavMenu button:hover,#mnavMenu a:hover{background:rgba(55,182,255,.12)}
+#mnavMenu .out{color:#ff5d73}
+@media(max-width:860px){#mnav{overflow-x:auto;scrollbar-width:none}#mnav::-webkit-scrollbar{display:none}
+  #mnav .mn-logo b{display:none}#mnavChip .nm{display:none}}
+body{padding-top:52px!important}
+
+
+#signInLink,#mePill{display:none!important}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<nav id="mnav">
+  <a class="mn-logo" href="index.html"><span class="mn-mark">M</span><b>MAATRAM</b></a>
+  <span class="mn-spacer"></span><a class="mn-link" href="index.html">Home</a><a class="mn-link" href="timers.html">Timers</a><a class="mn-link" href="app-gate.html">App Gate</a><a class="mn-link" href="study-room.html">Study Room</a><a class="mn-link" href="stats.html">Stats</a><a class="mn-link active" href="leaderboard.html">Leaderboard</a><a class="mn-link" href="socials.html">Socials</a>
+  <div id="mnavAuth">
+    <a id="mnavIn" href="login.html">Sign in</a>
+    <div id="mnavChip">
+      <img id="mnavPic" referrerpolicy="no-referrer" alt="">
+      <span class="nm" id="mnavNm"></span>
+      <span class="pt" id="mnavPts">0 PTS</span>
+      <div id="mnavMenu">
+        <a href="leaderboard.html">🏆 My rank</a>
+        <button class="out" id="mnavOut">Sign out</button>
+      </div>
+    </div>
+  </div>
+</nav>
+<canvas id="bg"></canvas>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="brand-mark">M</div>
+      <div><h1>Maatram</h1><span>Leaderboard</span></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="mode-pill" id="modePill">Local mode</div>
+      <div id="mePill" style="display:none;align-items:center;gap:8px;font-size:12px;font-weight:600;padding:5px 13px 5px 5px;border-radius:100px;border:1px solid var(--stroke)">
+        <img id="mePic" style="width:24px;height:24px;border-radius:50%;border:1px solid var(--green)" referrerpolicy="no-referrer"><span id="meNm"></span>
+      </div>
+      <a id="signInLink" href="login.html" style="display:none;font-size:11px;letter-spacing:1px;font-weight:800;text-transform:uppercase;color:#04120f;text-decoration:none;padding:8px 16px;border-radius:100px;background:linear-gradient(90deg,var(--green),var(--blue))">Sign in</a>
+    </div>
+  </header>
+
+  <div class="hero">
+    <h2>HALL OF FOCUS</h2>
+    <p>Real students · Real points · Real change</p>
+  </div>
+
+  <div class="join" id="join">
+    <input id="nameIn" maxlength="20" placeholder="Your name" autocomplete="off">
+    <button id="joinBtn">Join board</button>
+  </div>
+
+  <div class="podium" id="podium"></div>
+  <div class="list" id="list"></div>
+
+  <div id="empty">
+    <div class="big">🏆</div>
+    <b>The throne is empty.</b>
+    <p>No champions yet — add your name above, finish a focus session, and be the first name in Maatram history.</p>
+  </div>
+
+  <footer>MAATRAM · <b>Action ⟹ Value</b> · Points update as you complete sessions</footer>
+</div>
+
+<script>
+/* ══ Firebase (Maatram) — cloud mode when hosted, local mode from a file ══ */
+const FB_CONFIG = {
+  apiKey: "AIzaSyAjiAm61IkH3wB1tjwOyGRrXAuRMKQyCcQ",
+  authDomain: "maatram-859f4.firebaseapp.com",
+  projectId: "maatram-859f4",
+  storageBucket: "maatram-859f4.firebasestorage.app",
+  messagingSenderId: "770970784123",
+  appId: "1:770970784123:web:7c73c74ddb2179b69dedde"
+};
+
+const HOSTED = location.protocol==='http:'||location.protocol==='https:';
+let CLOUD=false, fbUser=null, fbApi=null;
+
+const $=id=>document.getElementById(id);
+const store=(()=>{try{localStorage.setItem('_t','1');localStorage.removeItem('_t');
+  return{get:k=>localStorage.getItem(k),set:(k,v)=>localStorage.setItem(k,v)};}
+  catch(e){const m={};return{get:k=>m[k]??null,set:(k,v)=>m[k]=v};}})();
+
+const KEY='maatram_board_v1';   // {users:[{id,name,points}]}  — local, real entries only
+function load(){try{return JSON.parse(store.get(KEY))||{users:[]}}catch(_){return{users:[]}}}
+function save(d){store.set(KEY,JSON.stringify(d))}
+
+let board=load();
+let myId=store.get('maatram_board_me')||null;
+
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function initials(n){return esc(n.trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?')}
+
+let cloudUsers=[];
+function render(){
+  const users=CLOUD?[...cloudUsers]:[...board.users].sort((a,b)=>b.points-a.points);
+  const pod=$('podium'),list=$('list'),empty=$('empty');
+  pod.innerHTML='';list.innerHTML='';
+  $('join').style.display=(CLOUD||myId)?'none':'flex';
+  if(!users.length){empty.style.display='block';return;}
+  empty.style.display='none';
+
+  const crowns=['👑','🥈','🥉'];
+  users.slice(0,3).forEach((u,i)=>{
+    const d=document.createElement('div');
+    d.className='pod p'+(i+1);
+    d.innerHTML='<div class="crown">'+crowns[i]+'</div>'
+      +(u.photo?'<img class="face" style="object-fit:cover" src="'+esc(u.photo)+'" referrerpolicy="no-referrer">':'<div class="face">'+initials(u.name)+'</div>')
+      +'<div class="nm">'+esc(u.name)+(u.id===myId?' (you)':'')+'</div>'
+      +'<div class="pt">'+u.points+' pts</div>';
+    pod.appendChild(d);
+    setTimeout(()=>d.classList.add('in'),120+i*160);
+  });
+
+  users.slice(3).forEach((u,i)=>{
+    const r=document.createElement('div');
+    r.className='rowu'+(u.id===myId?' me':'');
+    r.innerHTML='<div class="rk">#'+(i+4)+'</div>'
+      +(u.photo?'<img class="face-s" style="object-fit:cover" src="'+esc(u.photo)+'" referrerpolicy="no-referrer">':'<div class="face-s">'+initials(u.name)+'</div>')
+      +'<div class="nm">'+esc(u.name)+(u.id===myId?'<span>that\u2019s you!</span>':'')+'</div>'
+      +'<div class="pts">'+u.points+'</div>';
+    list.appendChild(r);
+    setTimeout(()=>r.classList.add('in'),200+i*90);
+  });
+}
+
+$('joinBtn').onclick=()=>{
+  const name=$('nameIn').value.trim();
+  if(!name)return;
+  myId='u'+Math.random().toString(36).slice(2);
+  board.users.push({id:myId,name,points:0});
+  store.set('maatram_board_me',myId);
+  save(board);render();
+};
+$('nameIn').addEventListener('keydown',e=>{if(e.key==='Enter')$('joinBtn').click();});
+
+/* public hook: other pages (timers etc.) call this to award points */
+window.maatramAddPoints=function(pts){
+  if(!myId)return false;
+  const u=board.users.find(u=>u.id===myId);
+  if(!u)return false;
+  u.points+=pts;save(board);render();return true;
+};
+
+/* also absorb points the timers page may have banked in localStorage */
+(function(){
+  const banked=+store.get('maatram_points')||0;
+  if(banked&&myId){
+    const u=board.users.find(u=>u.id===myId);
+    if(u&&u.points<banked){u.points=banked;save(board);}
+  }
+})();
+
+function flashSignIn(){
+  const l=document.getElementById('mnavIn'); if(!l)return;
+  l.style.transition='box-shadow .4s'; l.style.boxShadow='0 0 0 3px rgba(255,209,102,.7)';
+  setTimeout(()=>l.style.boxShadow='',1400);
+}
+
+async function bootCloud(){
+  if(!HOSTED) return;                       // file:// → stay in local mode
+  try{
+    const [{initializeApp},
+           {getAuth,onAuthStateChanged},
+           {getFirestore,collection,query,orderBy,limit,onSnapshot,doc,updateDoc,increment}] = await Promise.all([
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js').then(m=>({initializeApp:c=>m.getApps().length?m.getApp():m.initializeApp(c)})),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js')
+    ]);
+    const app=initializeApp(FB_CONFIG), auth=getAuth(app), db=getFirestore(app);
+    fbApi={db,doc,updateDoc,increment};
+    CLOUD=true;
+    $('modePill').textContent='Live · Global';
+    $('modePill').style.color='var(--green)';
+    $('modePill').style.borderColor='rgba(47,227,143,.45)';
+    
+
+    onAuthStateChanged(auth,u=>{
+      fbUser=u; myId=u?u.uid:null;
+      if(u){
+        $('mePill').style.display='flex';
+        $('mePic').src=u.photoURL||'';
+        $('meNm').textContent=u.displayName||'You';
+        $('signInLink').style.display='none';
+      }else{
+        $('mePill').style.display='none';
+        
+      }
+      render();
+    });
+
+    onSnapshot(query(collection(db,'users'),orderBy('points','desc'),limit(50)),snap=>{
+      cloudUsers=[];
+      snap.forEach(d=>{const v=d.data();
+        cloudUsers.push({id:d.id,name:v.name||'Student',photo:v.photo||'',points:v.points||0});});
+      render();
+    },err=>{
+      console.warn('board read',err);
+      $('modePill').textContent='Board offline';
+      $('modePill').style.color='#ff5d73';
+    });
+  }catch(e){ console.warn('cloud boot failed, local mode',e); }
+}
+bootCloud();
+render();
+
+/* ══ background: rising embers (scores climbing) ══ */
+const cv=$('bg'),ctx=cv.getContext('2d');
+const DPR=Math.min(devicePixelRatio||1,1.5);let W,H;
+function fit(){W=Math.max(1,innerWidth);H=Math.max(1,innerHeight);
+  cv.width=W*DPR;cv.height=H*DPR;cv.style.width=W+'px';cv.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0);}
+fit();addEventListener('resize',fit);
+const mouse={x:-999,y:-999};
+addEventListener('pointermove',e=>{mouse.x=e.clientX;mouse.y=e.clientY;});
+const COLS=['rgb(47,227,143)','rgb(55,182,255)','rgb(255,209,102)','rgb(255,110,199)'];
+const emb=[];for(let i=0;i<44;i++)emb.push({x:Math.random(),y:Math.random(),
+  v:.0006+Math.random()*.0016,c:COLS[i%4],s:.8+Math.random()*1.8,wob:Math.random()*7});
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function loop(){
+  ctx.clearRect(0,0,W,H);
+  for(const e of emb){
+    e.y-=e.v;e.wob+=.03;
+    if(e.y<-.02){e.y=1.02;e.x=Math.random();}
+    let px=e.x*W+Math.sin(e.wob)*14,py=e.y*H;
+    const dx=px-mouse.x,dy=py-mouse.y,d2=dx*dx+dy*dy;
+    if(d2<8000){const d=Math.sqrt(d2)||1;px+=dx/d*20;py+=dy/d*20;}
+    ctx.globalAlpha=.15+.35*Math.abs(Math.sin(e.wob));
+    ctx.fillStyle=e.c;
+    ctx.beginPath();ctx.arc(px,py,e.s,0,6.283);ctx.fill();
+    ctx.globalAlpha*=.4;
+    ctx.fillRect(px-.4,py,0.8,10);
+  }
+  ctx.globalAlpha=1;
+  if(!reduced)requestAnimationFrame(loop);
+}
+if(!reduced)requestAnimationFrame(loop);else loop();
+</script>
+
+<script>
+/* ══ universal nav auth (Firebase session shared across all pages) ══ */
+(async()=>{
+  const chip=document.getElementById('mnavChip'),inBtn=document.getElementById('mnavIn'),
+        menu=document.getElementById('mnavMenu');
+  if(!chip)return;
+  chip.addEventListener('click',e=>{ if(!e.target.closest('#mnavMenu')) menu.classList.toggle('open'); });
+  document.addEventListener('click',e=>{ if(!e.target.closest('#mnavChip')) menu.classList.remove('open'); });
+  if(!(location.protocol==='http:'||location.protocol==='https:'))return;  // file:// → nav stays simple
+  try{
+    const [{initializeApp,getApps,getApp},{getAuth,onAuthStateChanged,signOut},{getFirestore,doc,onSnapshot,runTransaction}]=await Promise.all([
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js')
+    ]);
+    const app=getApps().length?getApp():initializeApp({apiKey:"AIzaSyAjiAm61IkH3wB1tjwOyGRrXAuRMKQyCcQ",authDomain:"maatram-859f4.firebaseapp.com",projectId:"maatram-859f4",storageBucket:"maatram-859f4.firebasestorage.app",messagingSenderId:"770970784123",appId:"1:770970784123:web:7c73c74ddb2179b69dedde"});
+    const auth=getAuth(app),db=getFirestore(app);
+    let unsub=null;
+    /* ══ Maatram points engine (all pages) ══ */
+    let __mtUser=null;
+    window.maatramAward=async function(pts,reason){
+      pts=Math.round(pts); if(!pts) return;
+      /* local bank (works offline / signed-out) */
+      try{
+        const cur=+localStorage.getItem('maatram_points')||0;
+        localStorage.setItem('maatram_points',Math.max(0,cur+pts));
+      }catch(_){}
+      try{ new BroadcastChannel('maatram').postMessage({type:'points',pts}); }catch(_){}
+      try{ parent.postMessage({maatramRelay:{type:'points',pts}},'*'); }catch(_){}
+      mtToast(pts,reason);
+      /* cloud write (clamped to security rules: floor 0, max +200 / −100 per write) */
+      if(__mtUser){
+        const uid=__mtUser.uid;
+        try{
+          await runTransaction(db,async t=>{
+            const r=doc(db,'users',uid);
+            const s=await t.get(r);
+            const cur=(s.exists()&&s.data().points)||0;
+            let nx=cur+pts;
+            nx=Math.max(0,Math.max(cur-100,Math.min(cur+200,nx)));
+            t.set(r,{points:nx},{merge:true});
+          });
+        }catch(e){ console.warn('points write',e); }
+      }
+    };
+    function mtToast(pts,reason){
+      const t=document.createElement('div');
+      t.textContent=(pts>0?'+':'')+pts+' PTS'+(reason?' · '+reason:'');
+      t.style.cssText='position:fixed;top:64px;right:16px;z-index:900;font-family:Sora,Inter,sans-serif;'
+        +'font-weight:800;font-size:13px;letter-spacing:1px;padding:11px 20px;border-radius:100px;'
+        +'backdrop-filter:blur(10px);transition:all .5s cubic-bezier(.2,1.3,.3,1);opacity:0;transform:translateY(-14px);'
+        +(pts>0?'color:#04120f;background:linear-gradient(90deg,#2fe38f,#37b6ff);box-shadow:0 8px 30px -8px rgba(47,227,143,.7);'
+               :'color:#fff;background:linear-gradient(90deg,#ff5d73,#ff9a5d);box-shadow:0 8px 30px -8px rgba(255,93,115,.7);');
+      document.body.appendChild(t);
+      requestAnimationFrame(()=>{t.style.opacity='1';t.style.transform='none';});
+      setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(-14px)';},2600);
+      setTimeout(()=>t.remove(),3200);
+    }
+
+    onAuthStateChanged(auth,u=>{
+      __mtUser=u;
+      if(unsub){unsub();unsub=null;}
+      if(u){
+        inBtn.style.display='none';chip.style.display='flex';
+        document.getElementById('mnavPic').src=u.photoURL||'';
+        document.getElementById('mnavNm').textContent=(u.displayName||'You').split(' ')[0];
+        unsub=onSnapshot(doc(db,'users',u.uid),s=>{
+          document.getElementById('mnavPts').textContent=((s.exists()&&s.data().points)||0)+' PTS';
+        },()=>{});
+      }else{
+        inBtn.style.display='inline-block';chip.style.display='none';
+      }
+    });
+    document.getElementById('mnavOut').onclick=()=>{menu.classList.remove('open');signOut(auth);};
+  }catch(e){console.warn('nav auth',e);}
+})();
+</script>
+</body>
+</html>

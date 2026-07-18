@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maatram — App Gate</title>
+<style>
+  :root{
+    --bg:#04120f;
+    --ink:#eafff6;
+    --dim:#7da99b;
+    --green:#2fe38f;
+    --blue:#37b6ff;
+    --card:rgba(10,34,28,.55);
+    --stroke:rgba(47,227,143,.16);
+    --danger:#ff5d73;
+    --radius:22px;
+    --font-display:'Sora',sans-serif;
+    --font-body:'Inter',system-ui,sans-serif;
+  }
+  @import url('');
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-body);
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* Google fonts */
+  .fontload{position:absolute;opacity:0;pointer-events:none}
+
+  #field{position:fixed;inset:0;z-index:0;display:block}
+
+  .wrap{
+    position:relative;z-index:2;
+    max-width:1080px;margin:0 auto;
+    padding:48px 24px 96px;
+  }
+
+  /* header */
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:56px}
+  .brand{display:flex;align-items:center;gap:14px}
+  .brand-mark{
+    width:44px;height:44px;border-radius:14px;
+    background:linear-gradient(135deg,var(--green),var(--blue));
+    display:grid;place-items:center;font-family:var(--font-display);
+    font-weight:800;color:#04120f;font-size:22px;
+    box-shadow:0 0 30px rgba(47,227,143,.35);
+  }
+  .brand h1{font-family:var(--font-display);font-size:20px;font-weight:700;letter-spacing:.5px}
+  .brand span{display:block;font-size:11px;color:var(--dim);letter-spacing:2.5px;text-transform:uppercase;font-weight:500}
+  .status-pill{
+    font-size:12px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;
+    padding:8px 18px;border-radius:100px;border:1px solid var(--stroke);
+    color:var(--green);background:rgba(47,227,143,.06);
+    transition:all .4s;
+  }
+  .status-pill.locked{color:var(--danger);border-color:rgba(255,93,115,.3);background:rgba(255,93,115,.07)}
+
+  /* hero */
+  .hero{margin-bottom:52px}
+  .hero h2{
+    font-family:var(--font-display);
+    font-size:clamp(34px,5.5vw,58px);font-weight:800;line-height:1.05;
+    letter-spacing:-1px;margin-bottom:14px;
+  }
+  .hero h2 em{
+    font-style:normal;
+    background:linear-gradient(90deg,var(--green),var(--blue));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .hero p{color:var(--dim);font-size:16px;max-width:520px;line-height:1.6}
+
+  /* app grid */
+  .apps{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+    gap:18px;margin-bottom:60px;
+  }
+  .app{
+    position:relative;
+    background:var(--card);
+    border:1px solid var(--stroke);
+    border-radius:var(--radius);
+    padding:30px 20px 24px;
+    text-align:center;
+    text-decoration:none;color:var(--ink);
+    backdrop-filter:blur(14px);
+    transition:transform .35s cubic-bezier(.2,.8,.2,1),border-color .35s,box-shadow .35s;
+    overflow:hidden;
+  }
+  .app::after{
+    content:"";position:absolute;inset:0;border-radius:inherit;
+    background:radial-gradient(120px 120px at var(--mx,50%) var(--my,50%),rgba(55,182,255,.14),transparent 70%);
+    opacity:0;transition:opacity .3s;pointer-events:none;
+  }
+  .app:hover::after{opacity:1}
+  .app:hover{transform:translateY(-6px) scale(1.02);border-color:rgba(55,182,255,.4);box-shadow:0 18px 40px -18px rgba(55,182,255,.35)}
+  .app .icon{
+    width:58px;height:58px;margin:0 auto 16px;border-radius:16px;
+    display:grid;place-items:center;
+    transition:transform .35s;
+  }
+  .app:hover .icon{transform:rotate(-6deg) scale(1.08)}
+  .app .icon svg{width:30px;height:30px}
+  .app .name{font-family:var(--font-display);font-weight:600;font-size:15px}
+  .app .hint{font-size:11px;color:var(--dim);margin-top:5px;letter-spacing:.5px}
+
+  /* locked state on cards */
+  body.locked .app{
+    pointer-events:none;
+    filter:grayscale(1) brightness(.55);
+    transform:none !important;
+  }
+  body.locked .app .hint{color:var(--danger)}
+  .lock-badge{
+    position:absolute;top:12px;right:12px;width:24px;height:24px;
+    display:none;place-items:center;color:var(--danger);
+  }
+  body.locked .lock-badge{display:grid}
+  body.locked .app{animation:none}
+
+  /* shake when trying to click while locked */
+  @keyframes shake{
+    10%,90%{transform:translateX(-2px)}
+    20%,80%{transform:translateX(3px)}
+    30%,50%,70%{transform:translateX(-5px)}
+    40%,60%{transform:translateX(5px)}
+  }
+  .apps.deny{animation:shake .5s}
+
+  /* hard lock panel */
+  .panel{
+    background:var(--card);
+    border:1px solid var(--stroke);
+    border-radius:26px;
+    backdrop-filter:blur(16px);
+    padding:38px 34px;
+    display:grid;grid-template-columns:1fr auto;gap:34px;align-items:center;
+  }
+  @media(max-width:760px){.panel{grid-template-columns:1fr}}
+  .panel h3{
+    font-family:var(--font-display);font-size:24px;font-weight:700;margin-bottom:8px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .panel h3 svg{width:22px;height:22px;color:var(--green)}
+  .panel .sub{color:var(--dim);font-size:14px;line-height:1.55;max-width:440px;margin-bottom:26px}
+
+  .chips{display:flex;flex-wrap:wrap;gap:10px}
+  .chip{
+    font-family:var(--font-display);font-size:14px;font-weight:600;
+    padding:10px 18px;border-radius:100px;
+    border:1px solid var(--stroke);color:var(--dim);
+    background:transparent;cursor:pointer;
+    transition:all .25s;
+  }
+  .chip:hover{color:var(--ink);border-color:rgba(55,182,255,.45)}
+  .chip.active{
+    color:#04120f;border-color:transparent;
+    background:linear-gradient(90deg,var(--green),var(--blue));
+    box-shadow:0 6px 22px -8px rgba(47,227,143,.6);
+  }
+
+  /* lock button + ring */
+  .lock-zone{display:grid;place-items:center;gap:14px;justify-items:center}
+  .ring-wrap{position:relative;width:150px;height:150px;display:grid;place-items:center}
+  .ring-wrap svg.ring{position:absolute;inset:0;transform:rotate(-90deg);pointer-events:none}
+  .ring-bg{stroke:rgba(255,255,255,.07);fill:none;stroke-width:7}
+  .ring-fg{stroke:url(#ringGrad);fill:none;stroke-width:7;stroke-linecap:round;transition:stroke-dashoffset 1s linear}
+  #lockBtn{
+    position:relative;z-index:2;
+    width:104px;height:104px;border-radius:50%;
+    border:none;cursor:pointer;
+    background:linear-gradient(135deg,var(--green),var(--blue));
+    color:#04120f;display:grid;place-items:center;
+    font-family:var(--font-display);font-weight:800;font-size:13px;
+    letter-spacing:1px;text-transform:uppercase;
+    transition:transform .3s,box-shadow .3s,background .4s;
+    box-shadow:0 0 42px -6px rgba(47,227,143,.55);
+  }
+  #lockBtn:hover{transform:scale(1.06)}
+  #lockBtn:active{transform:scale(.96)}
+  body.locked #lockBtn{
+    background:linear-gradient(135deg,#ff5d73,#ff9a5d);
+    box-shadow:0 0 42px -6px rgba(255,93,115,.5);
+  }
+  #countdown{
+    font-family:var(--font-display);font-weight:700;font-size:20px;
+    letter-spacing:1px;color:var(--ink);min-height:26px;
+  }
+  #countdown.small{font-size:13px;color:var(--dim);font-weight:500;letter-spacing:.5px}
+
+  footer{margin-top:70px;text-align:center;color:var(--dim);font-size:12px;letter-spacing:1.5px}
+  footer b{color:var(--green);font-weight:600}
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+  }
+
+
+
+
+/* ══ MAATRAM UNIVERSAL NAV ══ */
+#mnav{position:fixed;top:0;left:0;right:0;height:52px;z-index:600;display:flex;align-items:center;gap:5px;
+  padding:0 14px;background:rgba(2,10,8,.82);backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(47,227,143,.15);font-family:'Sora','Inter',system-ui,sans-serif;cursor:auto}
+#mnav *{cursor:pointer}
+#mnav .mn-logo{display:flex;align-items:center;gap:8px;margin-right:10px;text-decoration:none;color:#eafff6}
+#mnav .mn-mark{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#2fe38f,#37b6ff);
+  display:grid;place-items:center;font-weight:800;color:#04120f;font-size:14px}
+#mnav .mn-logo b{font-size:13px;font-weight:700;letter-spacing:.4px}
+#mnav .mn-spacer{flex:1}
+#mnav a.mn-link{font-size:10.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:#7da99b;text-decoration:none;padding:7px 11px;border-radius:100px;transition:all .25s;white-space:nowrap}
+#mnav a.mn-link:hover{color:#eafff6;background:rgba(55,182,255,.1)}
+#mnav a.mn-link.active{color:#04120f;background:linear-gradient(90deg,#2fe38f,#37b6ff)}
+#mnavAuth{display:flex;align-items:center;gap:8px;margin-left:6px}
+#mnavIn{font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#04120f;
+  text-decoration:none;padding:8px 16px;border-radius:100px;background:linear-gradient(90deg,#2fe38f,#37b6ff);white-space:nowrap}
+#mnavChip{display:none;align-items:center;gap:8px;padding:4px 6px;border-radius:100px;
+  border:1px solid rgba(47,227,143,.3);background:rgba(47,227,143,.06);position:relative}
+#mnavChip img{width:28px;height:28px;border-radius:50%;border:1px solid #2fe38f}
+#mnavChip .nm{font-size:12px;font-weight:700;color:#eafff6;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#mnavChip .pt{font-size:10px;font-weight:800;color:#ffd166;letter-spacing:.5px;padding:3px 8px;border-radius:100px;
+  border:1px solid rgba(255,209,102,.35);background:rgba(255,209,102,.08);white-space:nowrap}
+#mnavMenu{display:none;position:absolute;top:44px;right:0;min-width:180px;z-index:700;
+  background:rgba(6,18,14,.97);border:1px solid rgba(47,227,143,.25);border-radius:14px;padding:8px;
+  box-shadow:0 18px 50px -12px rgba(0,0,0,.8)}
+#mnavMenu.open{display:block}
+#mnavMenu button,#mnavMenu a{display:block;width:100%;text-align:left;padding:10px 13px;border-radius:9px;
+  background:transparent;border:none;color:#eafff6;font-family:inherit;font-size:12px;font-weight:600;text-decoration:none;transition:background .2s}
+#mnavMenu button:hover,#mnavMenu a:hover{background:rgba(55,182,255,.12)}
+#mnavMenu .out{color:#ff5d73}
+@media(max-width:860px){#mnav{overflow-x:auto;scrollbar-width:none}#mnav::-webkit-scrollbar{display:none}
+  #mnav .mn-logo b{display:none}#mnavChip .nm{display:none}}
+body{padding-top:52px!important}
+
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+/* stub so feature code can always call it; hosted engine overrides */
+window.maatramAward=window.maatramAward||function(pts,reason){
+  try{const c=+localStorage.getItem('maatram_points')||0;
+      localStorage.setItem('maatram_points',Math.max(0,c+Math.round(pts)));}catch(_){}
+  try{ new BroadcastChannel('maatram').postMessage({type:'points',pts}); }catch(_){}
+  try{ parent.postMessage({maatramRelay:{type:'points',pts}},'*'); }catch(_){}
+};
+</script>
+</head>
+<body>
+<nav id="mnav">
+  <a class="mn-logo" href="index.html"><span class="mn-mark">M</span><b>MAATRAM</b></a>
+  <span class="mn-spacer"></span><a class="mn-link" href="index.html">Home</a><a class="mn-link" href="timers.html">Timers</a><a class="mn-link active" href="app-gate.html">App Gate</a><a class="mn-link" href="study-room.html">Study Room</a><a class="mn-link" href="stats.html">Stats</a><a class="mn-link" href="leaderboard.html">Leaderboard</a><a class="mn-link" href="socials.html">Socials</a>
+  <div id="mnavAuth">
+    <a id="mnavIn" href="login.html">Sign in</a>
+    <div id="mnavChip">
+      <img id="mnavPic" referrerpolicy="no-referrer" alt="">
+      <span class="nm" id="mnavNm"></span>
+      <span class="pt" id="mnavPts">0 PTS</span>
+      <div id="mnavMenu">
+        <a href="leaderboard.html">🏆 My rank</a>
+        <button class="out" id="mnavOut">Sign out</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<canvas id="field"></canvas>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="brand-mark">M</div>
+      <div>
+        <h1>Maatram</h1>
+        <span>Action ⟹ Value</span>
+      </div>
+    </div>
+    <div class="status-pill" id="statusPill">Gate open</div>
+  </header>
+
+  <section class="hero">
+    <h2>Your apps, behind a <em>gate you control.</em></h2>
+    <p>Tap an app to open it — or arm Hard Lock and put every shortcut out of reach until your focus window ends.</p>
+  </section>
+
+  <section class="apps" id="appGrid">
+    <!-- Instagram -->
+    <a class="app" href="https://www.instagram.com" target="_blank" rel="noopener">
+      <span class="lock-badge">🔒</span>
+      <div class="icon" style="background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4.5"/><circle cx="17.5" cy="6.5" r="1.4" fill="#fff" stroke="none"/></svg>
+      </div>
+      <div class="name">Instagram</div>
+      <div class="hint">instagram.com</div>
+    </a>
+    <!-- Snapchat -->
+    <a class="app" href="https://www.snapchat.com" target="_blank" rel="noopener">
+      <span class="lock-badge">🔒</span>
+      <div class="icon" style="background:#FFFC00">
+        <svg viewBox="0 0 24 24" fill="#111"><path d="M12 2c3.2 0 5.2 2.4 5.2 5.4 0 .8-.05 1.6-.1 2.3.5.2 1-.2 1.4-.2.5 0 1 .3 1 .8 0 .7-.9 1-1.6 1.3-.4.15-.8.35-.9.6-.05.2 0 .45.2.8.7 1.3 1.9 2.3 3.3 2.6.3.07.5.3.5.6 0 .1-.03.2-.08.3-.35.7-1.6.95-2.3 1.05-.1.3-.15.7-.25.95-.08.25-.3.4-.6.35-.4-.05-.9-.15-1.5-.15-.35 0-.7.03-1.05.1-.7.15-1.3.9-2.2 1.4-.5.3-1 .4-1.4.4h-.2c-.4 0-.9-.1-1.4-.4-.9-.5-1.5-1.25-2.2-1.4-.35-.07-.7-.1-1.05-.1-.6 0-1.1.1-1.5.15-.3.05-.5-.1-.6-.35-.1-.25-.15-.65-.25-.95-.7-.1-1.95-.35-2.3-1.05A.66.66 0 0 1 2 16.2c0-.3.2-.53.5-.6 1.4-.3 2.6-1.3 3.3-2.6.2-.35.25-.6.2-.8-.1-.25-.5-.45-.9-.6-.7-.3-1.6-.6-1.6-1.3 0-.5.5-.8 1-.8.4 0 .9.4 1.4.2-.05-.7-.1-1.5-.1-2.3C5.8 4.4 8.8 2 12 2z"/></svg>
+      </div>
+      <div class="name">Snapchat</div>
+      <div class="hint">snapchat.com</div>
+    </a>
+    <!-- TikTok -->
+    <a class="app" href="https://www.tiktok.com" target="_blank" rel="noopener">
+      <span class="lock-badge">🔒</span>
+      <div class="icon" style="background:#000">
+        <svg viewBox="0 0 24 24"><path fill="#25F4EE" d="M9.5 8.8v7.1a2.6 2.6 0 1 1-2.1-2.55V10.2a5.7 5.7 0 1 0 5.2 5.7V9.4a7.3 7.3 0 0 0 4.2 1.3V7.6a4.2 4.2 0 0 1-4.2-4.1h-3.1v5.3z" transform="translate(-.6 -.4)"/><path fill="#FE2C55" d="M10.7 9.6v7.1a2.6 2.6 0 1 1-2.1-2.55V11a5.7 5.7 0 1 0 5.2 5.7v-6.5a7.3 7.3 0 0 0 4.2 1.3V8.4a4.2 4.2 0 0 1-4.2-4.1h-3.1v5.3z" transform="translate(.6 .4)"/><path fill="#fff" d="M10.1 9.2v7.1A2.6 2.6 0 1 1 8 13.75v-3.15a5.7 5.7 0 1 0 5.2 5.7V9.8a7.3 7.3 0 0 0 4.2 1.3V8a4.2 4.2 0 0 1-4.2-4.1h-3.1v5.3z"/></svg>
+      </div>
+      <div class="name">TikTok</div>
+      <div class="hint">tiktok.com</div>
+    </a>
+    <!-- YouTube -->
+    <a class="app" href="https://www.youtube.com" target="_blank" rel="noopener">
+      <span class="lock-badge">🔒</span>
+      <div class="icon" style="background:#FF0000">
+        <svg viewBox="0 0 24 24" fill="#fff"><path d="M10 15.5v-7l6 3.5-6 3.5z"/><rect x="2" y="4.5" width="20" height="15" rx="4" fill="none" stroke="#fff" stroke-width="2"/></svg>
+      </div>
+      <div class="name">YouTube</div>
+      <div class="hint">youtube.com</div>
+    </a>
+    <!-- WhatsApp -->
+    <a class="app" href="https://www.whatsapp.com" target="_blank" rel="noopener">
+      <span class="lock-badge">🔒</span>
+      <div class="icon" style="background:#25D366">
+        <svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.6-6.1c-.25-.13-1.5-.74-1.73-.82-.23-.09-.4-.13-.57.12-.17.25-.65.82-.8.99-.15.17-.3.19-.55.06a6.7 6.7 0 0 1-3.34-2.92c-.25-.43.25-.4.72-1.34.08-.17.04-.31-.02-.44-.06-.13-.57-1.37-.78-1.87-.2-.5-.42-.42-.57-.43h-.49c-.17 0-.44.06-.67.31-.23.25-.88.86-.88 2.1 0 1.24.9 2.44 1.03 2.6.13.17 1.78 2.72 4.3 3.81.6.26 1.07.42 1.44.53.6.19 1.15.17 1.58.1.48-.07 1.5-.61 1.7-1.2.21-.6.21-1.1.15-1.2-.06-.11-.23-.17-.48-.3z"/></svg>
+      </div>
+      <div class="name">WhatsApp</div>
+      <div class="hint">whatsapp.com</div>
+    </a>
+  </section>
+
+  <section class="panel">
+    <div>
+      <h3>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+        Hard Lock Mode
+      </h3>
+      <p class="sub">Pick a focus window. Once armed, every app above goes grey and un-clickable until the timer runs out. No exits, no shortcuts — that's the point.</p>
+      <div class="chips" id="chips">
+        <button class="chip" data-min="5">5 min</button>
+        <button class="chip" data-min="10">10 min</button>
+        <button class="chip" data-min="15">15 min</button>
+        <button class="chip active" data-min="25">25 min</button>
+        <button class="chip" data-min="45">45 min</button>
+        <button class="chip" data-min="60">60 min</button>
+        <button class="chip" data-min="90">90 min</button>
+      </div>
+    </div>
+    <div class="lock-zone">
+      <div class="ring-wrap">
+        <svg class="ring" viewBox="0 0 150 150">
+          <defs>
+            <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#2fe38f"/>
+              <stop offset="100%" stop-color="#37b6ff"/>
+            </linearGradient>
+          </defs>
+          <circle class="ring-bg" cx="75" cy="75" r="68"/>
+          <circle class="ring-fg" id="ringFg" cx="75" cy="75" r="68"/>
+        </svg>
+        <button id="lockBtn">Lock</button>
+      </div>
+      <div id="countdown" class="small">Ready when you are</div>
+    </div>
+  </section>
+
+  <footer>MAATRAM · <b>Action ⟹ Value</b> · Built by Team Maatram, SSVM School of Excellence</footer>
+</div>
+
+<script>
+/* ============ storage (works as downloaded file; falls back in sandboxed views) ============ */
+const store = (() => {
+  try { localStorage.setItem('_t','1'); localStorage.removeItem('_t');
+    return { get:k=>localStorage.getItem(k), set:(k,v)=>localStorage.setItem(k,v), del:k=>localStorage.removeItem(k) };
+  } catch(e){ const m={}; return { get:k=>m[k]??null, set:(k,v)=>m[k]=v, del:k=>delete m[k] }; }
+})();
+
+/* ============ hard lock logic ============ */
+const body=document.body, pill=document.getElementById('statusPill'),
+      lockBtn=document.getElementById('lockBtn'), cd=document.getElementById('countdown'),
+      ringFg=document.getElementById('ringFg'), chips=document.getElementById('chips'),
+      grid=document.getElementById('appGrid');
+const CIRC = 2*Math.PI*68;
+ringFg.style.strokeDasharray = CIRC;
+ringFg.style.strokeDashoffset = CIRC;
+
+let selMin = 25, tick=null, lockEnd=0, lockTotal=0;
+
+chips.addEventListener('click', e=>{
+  const c = e.target.closest('.chip'); if(!c || body.classList.contains('locked')) return;
+  chips.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
+  c.classList.add('active'); selMin=+c.dataset.min;
+});
+
+function fmt(s){ const m=Math.floor(s/60), r=s%60; return m+':'+String(r).padStart(2,'0'); }
+
+function engage(endTs, totalSec){
+  lockEnd=endTs; lockTotal=totalSec;
+  body.classList.add('locked');
+  pill.textContent='Hard lock armed'; pill.classList.add('locked');
+  lockBtn.textContent='Locked';
+  cd.classList.remove('small');
+  chips.querySelectorAll('.chip').forEach(x=>x.style.opacity=.4);
+  clearInterval(tick);
+  tick=setInterval(update,250); update();
+}
+
+function release(){
+  clearInterval(tick); tick=null;
+  /* +10 for every full 5 minutes survived */
+  const earned=Math.floor(lockTotal/300)*10;
+  if(earned>0) window.maatramAward(earned,'Hard Lock '+Math.floor(lockTotal/60)+'m');
+  store.del('maatram_lock_end'); store.del('maatram_lock_total');
+  body.classList.remove('locked');
+  pill.textContent='Gate open'; pill.classList.remove('locked');
+  lockBtn.textContent='Lock';
+  cd.textContent='Focus window complete — nice work.'; cd.classList.add('small');
+  ringFg.style.strokeDashoffset=CIRC;
+  chips.querySelectorAll('.chip').forEach(x=>x.style.opacity=1);
+  burst();
+}
+
+function update(){
+  const left=Math.max(0, Math.round((lockEnd-Date.now())/1000));
+  cd.textContent=fmt(left);
+  ringFg.style.strokeDashoffset = CIRC*(left/lockTotal);
+  if(left<=0) release();
+}
+
+lockBtn.addEventListener('click', ()=>{
+  if(body.classList.contains('locked')){
+    // hard lock: no early exit — shake to say no
+    grid.classList.remove('deny'); void grid.offsetWidth; grid.classList.add('deny');
+    return;
+  }
+  const total=selMin*60, end=Date.now()+total*1000;
+  store.set('maatram_lock_end', end); store.set('maatram_lock_total', total);
+  engage(end,total);
+});
+
+/* block clicks on apps while locked (belt & suspenders) + shake feedback */
+grid.addEventListener('click', e=>{
+  if(body.classList.contains('locked')){
+    e.preventDefault(); e.stopPropagation();
+    grid.classList.remove('deny'); void grid.offsetWidth; grid.classList.add('deny');
+    return;
+  }
+  /* SYNC: report social-app opens to the Study Room page */
+  const opened = e.target.closest('.app');
+  if(opened){
+    const evt = { app: opened.querySelector('.name').textContent, ts: Date.now() };
+    try{ new BroadcastChannel('maatram').postMessage({type:'social_open', ...evt}); }catch(_){}
+    try{ store.set('maatram_social_open', JSON.stringify(evt)); }catch(_){}
+    try{ parent.postMessage({maatramRelay:{type:'social_open', ...evt}},'*'); }catch(_){}
+    window.maatramAward(-25,evt.app+' opened');
+  }
+}, true);
+
+/* restore lock across refresh */
+(function(){
+  const end=+store.get('maatram_lock_end'), total=+store.get('maatram_lock_total');
+  if(end && total && end>Date.now()) engage(end,total);
+})();
+
+/* spotlight follow on cards */
+document.querySelectorAll('.app').forEach(a=>{
+  a.addEventListener('pointermove', e=>{
+    const r=a.getBoundingClientRect();
+    a.style.setProperty('--mx',(e.clientX-r.left)+'px');
+    a.style.setProperty('--my',(e.clientY-r.top)+'px');
+  });
+});
+
+/* ============ interactive background: magnetic firefly constellation ============ */
+const cv=document.getElementById('field'), ctx=cv.getContext('2d');
+let W,H,DPR;
+function resize(){ DPR=Math.min(devicePixelRatio||1,2); W=innerWidth; H=innerHeight;
+  cv.width=W*DPR; cv.height=H*DPR; cv.style.width=W+'px'; cv.style.height=H+'px'; ctx.setTransform(DPR,0,0,DPR,0,0); }
+resize(); addEventListener('resize',resize);
+
+const mouse={x:-9999,y:-9999,down:false};
+addEventListener('pointermove',e=>{mouse.x=e.clientX;mouse.y=e.clientY});
+addEventListener('pointerleave',()=>{mouse.x=-9999;mouse.y=-9999});
+addEventListener('pointerdown',()=>mouse.down=true);
+addEventListener('pointerup',()=>mouse.down=false);
+
+const N = Math.min(90, Math.floor(innerWidth/14));
+const P=[];
+for(let i=0;i<N;i++){
+  P.push({
+    x:Math.random()*innerWidth, y:Math.random()*innerHeight,
+    vx:(Math.random()-.5)*.35, vy:(Math.random()-.5)*.35,
+    r:1+Math.random()*2.2,
+    hue: Math.random()<.5 ? 150 : 200, // green or blue family
+    tw: Math.random()*Math.PI*2
+  });
+}
+
+let bursts=[];
+function burst(){
+  for(let i=0;i<40;i++){
+    const a=Math.random()*Math.PI*2, s=2+Math.random()*4;
+    bursts.push({x:W/2,y:H/2,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1,hue:Math.random()<.5?150:200});
+  }
+}
+
+const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function frame(t){
+  ctx.clearRect(0,0,W,H);
+  // ambient vignette glow
+  const g=ctx.createRadialGradient(W*.5,H*.15,0,W*.5,H*.15,H*.9);
+  const lockedNow=body.classList.contains('locked');
+  g.addColorStop(0, lockedNow?'rgba(255,93,115,.05)':'rgba(47,227,143,.06)');
+  g.addColorStop(1,'transparent');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+
+  for(const p of P){
+    // magnetic behaviour: attract gently, repel hard when pressed OR when locked
+    const dx=mouse.x-p.x, dy=mouse.y-p.y, d2=dx*dx+dy*dy;
+    if(d2<160*160){
+      const d=Math.sqrt(d2)||1, f=(160-d)/160;
+      const repel = mouse.down || lockedNow;
+      const k = repel ? -.6 : .18;
+      p.vx += (dx/d)*f*k*.35;
+      p.vy += (dy/d)*f*k*.35;
+    }
+    p.x+=p.vx; p.y+=p.vy;
+    p.vx*=.985; p.vy*=.985;
+    p.vx+=(Math.random()-.5)*.02; p.vy+=(Math.random()-.5)*.02;
+    if(p.x<-20)p.x=W+20; if(p.x>W+20)p.x=-20;
+    if(p.y<-20)p.y=H+20; if(p.y>H+20)p.y=-20;
+
+    p.tw+=.04;
+    const glow=.35+.35*Math.sin(p.tw);
+    const hue = lockedNow ? 350 : p.hue;
+    ctx.beginPath();
+    ctx.fillStyle=`hsla(${hue},85%,62%,${glow})`;
+    ctx.shadowColor=`hsla(${hue},90%,60%,.8)`; ctx.shadowBlur=10;
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0;
+  }
+
+  // connective threads
+  ctx.lineWidth=.6;
+  for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){
+    const a=P[i],b=P[j],dx=a.x-b.x,dy=a.y-b.y,d2=dx*dx+dy*dy;
+    if(d2<110*110){
+      const o=(1-Math.sqrt(d2)/110)*.22;
+      ctx.strokeStyle = lockedNow?`rgba(255,93,115,${o})`:`rgba(55,182,255,${o})`;
+      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+    }
+  }
+
+  // celebration bursts
+  bursts=bursts.filter(b=>b.life>0);
+  for(const b of bursts){
+    b.x+=b.vx;b.y+=b.vy;b.vy+=.05;b.life-=.015;
+    ctx.beginPath();
+    ctx.fillStyle=`hsla(${b.hue},90%,60%,${b.life})`;
+    ctx.arc(b.x,b.y,2.5*b.life,0,Math.PI*2);ctx.fill();
+  }
+
+  if(!reduced) requestAnimationFrame(frame);
+}
+if(!reduced) requestAnimationFrame(frame); else frame(0);
+</script>
+
+<script>
+/* ══ universal nav auth (Firebase session shared across all pages) ══ */
+(async()=>{
+  const chip=document.getElementById('mnavChip'),inBtn=document.getElementById('mnavIn'),
+        menu=document.getElementById('mnavMenu');
+  if(!chip)return;
+  chip.addEventListener('click',e=>{ if(!e.target.closest('#mnavMenu')) menu.classList.toggle('open'); });
+  document.addEventListener('click',e=>{ if(!e.target.closest('#mnavChip')) menu.classList.remove('open'); });
+  if(!(location.protocol==='http:'||location.protocol==='https:'))return;  // file:// → nav stays simple
+  try{
+    const [{initializeApp,getApps,getApp},{getAuth,onAuthStateChanged,signOut},{getFirestore,doc,onSnapshot,runTransaction}]=await Promise.all([
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js')
+    ]);
+    const app=getApps().length?getApp():initializeApp({apiKey:"AIzaSyAjiAm61IkH3wB1tjwOyGRrXAuRMKQyCcQ",authDomain:"maatram-859f4.firebaseapp.com",projectId:"maatram-859f4",storageBucket:"maatram-859f4.firebasestorage.app",messagingSenderId:"770970784123",appId:"1:770970784123:web:7c73c74ddb2179b69dedde"});
+    const auth=getAuth(app),db=getFirestore(app);
+    let unsub=null;
+    /* ══ Maatram points engine (all pages) ══ */
+    let __mtUser=null;
+    window.maatramAward=async function(pts,reason){
+      pts=Math.round(pts); if(!pts) return;
+      /* local bank (works offline / signed-out) */
+      try{
+        const cur=+localStorage.getItem('maatram_points')||0;
+        localStorage.setItem('maatram_points',Math.max(0,cur+pts));
+      }catch(_){}
+      try{ new BroadcastChannel('maatram').postMessage({type:'points',pts}); }catch(_){}
+      try{ parent.postMessage({maatramRelay:{type:'points',pts}},'*'); }catch(_){}
+      mtToast(pts,reason);
+      /* cloud write (clamped to security rules: floor 0, max +200 / −100 per write) */
+      if(__mtUser){
+        const uid=__mtUser.uid;
+        try{
+          await runTransaction(db,async t=>{
+            const r=doc(db,'users',uid);
+            const s=await t.get(r);
+            const cur=(s.exists()&&s.data().points)||0;
+            let nx=cur+pts;
+            nx=Math.max(0,Math.max(cur-100,Math.min(cur+200,nx)));
+            t.set(r,{points:nx},{merge:true});
+          });
+        }catch(e){ console.warn('points write',e); }
+      }
+    };
+    function mtToast(pts,reason){
+      const t=document.createElement('div');
+      t.textContent=(pts>0?'+':'')+pts+' PTS'+(reason?' · '+reason:'');
+      t.style.cssText='position:fixed;top:64px;right:16px;z-index:900;font-family:Sora,Inter,sans-serif;'
+        +'font-weight:800;font-size:13px;letter-spacing:1px;padding:11px 20px;border-radius:100px;'
+        +'backdrop-filter:blur(10px);transition:all .5s cubic-bezier(.2,1.3,.3,1);opacity:0;transform:translateY(-14px);'
+        +(pts>0?'color:#04120f;background:linear-gradient(90deg,#2fe38f,#37b6ff);box-shadow:0 8px 30px -8px rgba(47,227,143,.7);'
+               :'color:#fff;background:linear-gradient(90deg,#ff5d73,#ff9a5d);box-shadow:0 8px 30px -8px rgba(255,93,115,.7);');
+      document.body.appendChild(t);
+      requestAnimationFrame(()=>{t.style.opacity='1';t.style.transform='none';});
+      setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(-14px)';},2600);
+      setTimeout(()=>t.remove(),3200);
+    }
+
+    onAuthStateChanged(auth,u=>{
+      __mtUser=u;
+      if(unsub){unsub();unsub=null;}
+      if(u){
+        inBtn.style.display='none';chip.style.display='flex';
+        document.getElementById('mnavPic').src=u.photoURL||'';
+        document.getElementById('mnavNm').textContent=(u.displayName||'You').split(' ')[0];
+        unsub=onSnapshot(doc(db,'users',u.uid),s=>{
+          document.getElementById('mnavPts').textContent=((s.exists()&&s.data().points)||0)+' PTS';
+        },()=>{});
+      }else{
+        inBtn.style.display='inline-block';chip.style.display='none';
+      }
+    });
+    document.getElementById('mnavOut').onclick=()=>{menu.classList.remove('open');signOut(auth);};
+  }catch(e){console.warn('nav auth',e);}
+})();
+</script>
+</body>
+</html>
