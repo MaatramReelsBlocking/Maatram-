@@ -206,8 +206,9 @@ async function boot(){
     }catch(e){
       st.className='err';
       st.textContent = e.code==='auth/popup-closed-by-user' ? 'Popup closed — try again.'
-        : e.code==='auth/unauthorized-domain' ? 'Add this domain in Firebase → Authentication → Settings → Authorized domains.'
+        : e.code==='auth/unauthorized-domain' ? 'Sign-in is temporarily unavailable — please try again in a bit.'
         : 'Sign-in failed: '+(e.code||e.message);
+      if(e.code==='auth/unauthorized-domain')console.warn('[Maatram dev] Add this domain in Firebase → Authentication → Settings → Authorized domains:',location.hostname);
     }
     $('gbtn').disabled=false;
   };
