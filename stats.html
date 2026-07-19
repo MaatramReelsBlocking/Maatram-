@@ -33,23 +33,9 @@
   .card{background:var(--card);border:1px solid var(--stroke);border-radius:22px;backdrop-filter:blur(12px);padding:26px 24px}
   .card h3{font-family:var(--font-display);font-size:15px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:9px}
   .card .sub{font-size:12.5px;color:var(--dim);line-height:1.55;margin-bottom:18px}
-  .step{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:8px;font-size:12px;font-weight:800;background:linear-gradient(135deg,var(--green),var(--blue));color:#03120c}
 
   /* dropzone */
-  #drop{border:1.5px dashed rgba(47,227,143,.4);border-radius:16px;padding:34px 18px;text-align:center;cursor:pointer;transition:all .3s;position:relative}
-  #drop:hover,#drop.over{border-color:var(--blue);background:rgba(55,182,255,.05)}
-  #drop .big{font-size:34px;margin-bottom:8px}
-  #drop b{font-size:14px;display:block;margin-bottom:4px}
-  #drop span{font-size:12px;color:var(--dim)}
   #fileInput{display:none}
-  #ocrStatus{margin-top:14px;font-size:12.5px;color:var(--dim);min-height:18px}
-  #ocrStatus.working{color:var(--blue)}
-  #ocrStatus.ok{color:var(--green)}
-  #ocrStatus.err{color:var(--danger)}
-  .ocr-bar{height:4px;border-radius:100px;background:rgba(255,255,255,.06);margin-top:10px;overflow:hidden;opacity:0;transition:opacity .3s}
-  .ocr-bar.show{opacity:1}
-  .ocr-bar i{display:block;height:100%;width:0%;border-radius:100px;background:linear-gradient(90deg,var(--green),var(--blue));transition:width .3s}
-  #preview{max-width:100%;max-height:120px;border-radius:10px;margin-top:12px;display:none;border:1px solid var(--stroke)}
 
   /* manual entry rows */
   .app-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05)}
@@ -60,7 +46,6 @@
   .tstep:hover{color:var(--ink);border-color:var(--blue)}
   .tval{font-variant-numeric:tabular-nums;font-family:var(--font-display);font-weight:700;font-size:14px;min-width:74px;text-align:center}
   .tval.zero{color:var(--dim);font-weight:500}
-  .ocr-flag{font-size:9px;letter-spacing:1px;padding:3px 7px;border-radius:6px;background:rgba(55,182,255,.12);border:1px solid rgba(55,182,255,.3);color:var(--blue);text-transform:uppercase;font-weight:700}
 
   #saveBtn{margin-top:18px;width:100%;font-family:var(--font-display);font-weight:800;font-size:13px;letter-spacing:2px;text-transform:uppercase;padding:15px;border-radius:100px;border:none;cursor:pointer;color:#03120c;background:linear-gradient(90deg,var(--green),var(--blue));transition:transform .25s,box-shadow .25s}
   #saveBtn:hover{transform:translateY(-2px);box-shadow:0 12px 30px -10px rgba(47,227,143,.55)}
@@ -141,7 +126,6 @@ body{padding-top:52px!important}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.5/tesseract.min.js"></script>
 <script>
 /* stub so feature code can always call it; hosted engine overrides */
 window.maatramAward=window.maatramAward||function(pts,reason){
@@ -181,29 +165,14 @@ window.maatramAward=window.maatramAward||function(pts,reason){
 
   <section class="hero">
     <h2>Your screen time, <em>owned by you.</em></h2>
-    <p>Social apps won't share your data — so we take it back ourselves. Upload a screenshot of your phone's Digital Wellbeing / Screen Time page and we'll read it automatically, or log it by hand. Everything stays on your device.</p>
+    <p>Social apps won't share your data — so we take it back ourselves. Log your screen time by hand below. Everything stays on your device.</p>
   </section>
 
   <div class="grid">
-    <!-- OCR CARD -->
-    <div class="card">
-      <h3><span class="step">1</span> Screenshot import</h3>
-      <p class="sub">Android: Settings → Digital Wellbeing. iPhone: Settings → Screen Time. Screenshot the per-app list and drop it here — OCR runs fully in your browser, nothing is uploaded anywhere.</p>
-      <div id="drop">
-        <div class="big">📸</div>
-        <b>Drop screenshot here</b>
-        <span>or tap to choose a file</span>
-        <input type="file" id="fileInput" accept="image/*">
-      </div>
-      <img id="preview" alt="preview">
-      <div class="ocr-bar" id="ocrBar"><i id="ocrFill"></i></div>
-      <div id="ocrStatus"></div>
-    </div>
-
     <!-- MANUAL CARD -->
     <div class="card">
-      <h3><span class="step">2</span> Log today's usage</h3>
-      <p class="sub">OCR fills what it finds — fix or add anything below, then save the day.</p>
+      <h3>Log today's usage</h3>
+      <p class="sub">Enter your screen time for each app, then save the day.</p>
       <div id="appRows"></div>
       <button id="saveBtn">Save today</button>
       <div id="savedMsg"></div>
@@ -268,13 +237,13 @@ $('dayPill').textContent=new Date().toDateString();
 function fmtMin(m){m=Math.round(m);const h=Math.floor(m/60);return h?h+'h '+(m%60)+'m':m+'m';}
 
 const rowsEl=$('appRows');
-function renderRows(flags={}){
+function renderRows(){
   rowsEl.innerHTML='';
   APPS.forEach(a=>{
     const row=document.createElement('div');row.className='app-row';
     row.innerHTML=`
       <div class="app-ic" style="background:${a.color}22;border:1px solid ${a.color}55">${a.emoji}</div>
-      <div class="nm">${a.name} ${flags[a.id]?'<span class="ocr-flag">OCR</span>':''}</div>
+      <div class="nm">${a.name}</div>
       <button class="tstep" data-id="${a.id}" data-d="-15">−</button>
       <div class="tval ${today[a.id]?'':'zero'}" id="tv_${a.id}">${fmtMin(today[a.id])}</div>
       <button class="tstep" data-id="${a.id}" data-d="15">+</button>`;
@@ -296,82 +265,6 @@ $('saveBtn').onclick=()=>{
   setTimeout(()=>$('savedMsg').textContent='',2500);
   renderStats(true);
 };
-
-/* ═══════ OCR ═══════ */
-const drop=$('drop'),fi=$('fileInput'),st=$('ocrStatus'),bar=$('ocrBar'),fill=$('ocrFill');
-drop.onclick=()=>fi.click();
-['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over')}));
-['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over')}));
-drop.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)runOCR(f);});
-fi.onchange=()=>{if(fi.files[0])runOCR(fi.files[0]);};
-
-function setStatus(msg,cls){st.textContent=msg;st.className=cls||'';}
-
-async function runOCR(file){
-  if(typeof Tesseract==='undefined'){
-    setStatus('OCR engine unavailable (no internet?). Enter your times manually below.','err');
-    return;
-  }
-  if($('preview').src)URL.revokeObjectURL($('preview').src);
-  $('preview').src=URL.createObjectURL(file);$('preview').style.display='block';
-  bar.classList.add('show');fill.style.width='0%';
-  setStatus('Reading screenshot…','working');
-  try{
-    const res=await Tesseract.recognize(file,'eng',{logger:m=>{
-      if(m.status==='recognizing text')fill.style.width=Math.round(m.progress*100)+'%';
-    }});
-    fill.style.width='100%';
-    const found=parseUsage(res.data.text);
-    const n=Object.keys(found).length;
-    if(n){
-      const flags={};
-      for(const [id,min] of Object.entries(found)){today[id]=min;flags[id]=true;}
-      renderRows(flags);
-      setStatus('✓ Found '+n+' app'+(n>1?'s':'')+' — check the values, fix if needed, then Save.','ok');
-    }else{
-      setStatus('Couldn\'t recognize app times in that image. Try a clearer screenshot of the per-app list, or enter manually.','err');
-    }
-  }catch(err){
-    setStatus('OCR failed to load (needs internet for the first run). Enter manually instead.','err');
-  }
-  setTimeout(()=>bar.classList.remove('show'),1200);
-}
-
-/* parse lines like "Instagram 1 hr 24 min" / "YouTube 45 min" / "TikTok 2h 5m" / "Snapchat 1:24"
-   — and layouts where the app name and time sit on separate lines (common on iPhone Screen Time) */
-function timeFromLine(line){
-  const hm=line.match(/(\d+)\s*(?:hr|hrs|hour|hours|h)\b[\s,]*(?:(\d+)\s*(?:min|mins|minute|minutes|m)\b)?/);
-  const mo=line.match(/(\d+)\s*(?:min|mins|minute|minutes|m)\b/);
-  const col=line.match(/\b(\d{1,2}):(\d{2})\b/);
-  let min=0;
-  if(hm){min=+hm[1]*60+(+hm[2]||0);}
-  else if(mo){min=+mo[1];}
-  else if(col){min=+col[1]*60+ +col[2];}
-  return (min>0&&min<24*60)?min:0;
-}
-function parseUsage(text){
-  const out={};
-  const lines=text.toLowerCase().split('\n').map(l=>l.trim()).filter(Boolean);
-  for(let i=0;i<lines.length;i++){
-    const line=lines[i];
-    for(const a of APPS){
-      if(a.id==='other'||out[a.id]!==undefined)continue;
-      if(!a.aliases.some(al=>line.includes(al)))continue;
-      /* same-line time */
-      let min=timeFromLine(line);
-      /* or time on the next 1–2 lines (iPhone layout) */
-      if(!min)for(let j=1;j<=2&&i+j<lines.length;j++){
-        const nl=lines[i+j];
-        /* skip if that line names another app */
-        if(APPS.some(b=>b.id!==a.id&&b.aliases.some(al=>nl.includes(al))))break;
-        min=timeFromLine(nl);
-        if(min)break;
-      }
-      if(min)out[a.id]=min;
-    }
-  }
-  return out;
-}
 
 /* ═══════ STATS ═══════ */
 function renderStats(animate){

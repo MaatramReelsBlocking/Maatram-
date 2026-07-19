@@ -373,12 +373,52 @@ window.maatramAward=window.maatramAward||function(pts,reason){
   <footer>MAATRAM · <b>Action ⟹ Value</b> · Built by Team Maatram, SSVM School of Excellence</footer>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.3.5/mqtt.min.js"></script>
 <script>
 /* ============ storage (works as downloaded file; falls back in sandboxed views) ============ */
 const store = (() => {
   try { localStorage.setItem('_t','1'); localStorage.removeItem('_t');
     return { get:k=>localStorage.getItem(k), set:(k,v)=>localStorage.setItem(k,v), del:k=>localStorage.removeItem(k) };
   } catch(e){ const m={}; return { get:k=>m[k]??null, set:(k,v)=>m[k]=v, del:k=>delete m[k] }; }
+})();
+
+/* ============ ROOM RELAY — keeps your Study Room seat alive while you're here,
+   and broadcasts strikes to roommates even though the room page is closed ============ */
+const ROOM=(()=>{
+  const SKEY='maatram_room_session';
+  const g=()=>{try{return JSON.parse(store.get(SKEY)||'null')}catch(_){return null}};
+  const patch=p=>{const s=g();if(s){Object.assign(s,p);try{store.set(SKEY,JSON.stringify(s))}catch(_){}}};
+  const uid=()=>store.get('maatram_room_uid')||('g'+Math.random().toString(36).slice(2));
+  const roomTabAlive=()=>{const t=+store.get('maatram_room_alive')||0;return Date.now()-t<4000;};
+  let cli=null, topic='';
+  function ensure(){
+    const s=g();
+    if(!s||!s.code||Date.now()-(s.last||0)>5*60*1000){ if(cli){try{cli.end(true)}catch(_){}cli=null;} return null; }
+    if(roomTabAlive()){ if(cli){try{cli.end(true)}catch(_){}cli=null;} return s; }  // room tab open elsewhere — it handles sync
+    if(!cli && window.mqtt){
+      topic='maatram/room/'+s.code;
+      try{
+        cli=mqtt.connect('wss://broker.emqx.io:8084/mqtt',{clientId:'maatram_'+uid()+'_g',keepalive:30,reconnectPeriod:4000,connectTimeout:8000});
+        cli.on('error',()=>{});
+        cli.on('connect',()=>{const s2=g();if(s2)pub({type:'hello',name:s2.name,avatar:s2.avatar,strikes:s2.strikes||0,elapsed:Math.floor((Date.now()-(s2.start||Date.now()))/1000)});});
+      }catch(_){cli=null;}
+    }
+    return s;
+  }
+  function pub(o){ if(cli&&cli.connected){o._id=uid();try{cli.publish(topic,JSON.stringify(o))}catch(_){}} }
+  setInterval(()=>{
+    const s=ensure(); if(!s) return;
+    patch({last:Date.now()});
+    if(!roomTabAlive()) pub({type:'ping',elapsed:Math.floor((Date.now()-(s.start||Date.now()))/1000)});
+  },2000);
+  ensure();
+  return { strike(app,ts){
+    const s=ensure(); if(!s) return;
+    const strikes=(s.strikes||0)+1;
+    patch({strikes,last:Date.now()});
+    try{store.set('maatram_social_seen',String(ts));}catch(_){}
+    if(!roomTabAlive()) pub({type:'strike',app,ts,name:s.name,avatar:s.avatar,elapsed:Math.floor((Date.now()-(s.start||Date.now()))/1000)});
+  }};
 })();
 
 /* ============ hard lock logic ============ */
@@ -458,6 +498,7 @@ grid.addEventListener('click', e=>{
     try{ new BroadcastChannel('maatram').postMessage({type:'social_open', ...evt}); }catch(_){}
     try{ store.set('maatram_social_open', JSON.stringify(evt)); }catch(_){}
     try{ parent.postMessage({maatramRelay:{type:'social_open', ...evt}},'*'); }catch(_){}
+    try{ ROOM.strike(evt.app, evt.ts); }catch(_){}
     window.maatramAward(-25,evt.app+' opened');
   }
 }, true);

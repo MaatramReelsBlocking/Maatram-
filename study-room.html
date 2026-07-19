@@ -314,7 +314,7 @@ function connect(code){
   client.on('connect',()=>{
     wsReady=true; setBadge('live','Connected');
     client.subscribe(topicFor(code),()=>{ 
-      if(inRoom) sendMsg({type:'hello',name:myName,avatar:myAvatar,strikes:myStrikes,elapsed:myElapsed()});
+      if(inRoom) sendMsg({type:'hello',name:myName,avatar:myAvatar,strikes:myStrikes,elapsed:myElapsed(),reintro:true});
     });
   });
   client.on('message',(t,payload)=>{ try{ onMsg(JSON.parse(payload.toString())); }catch(_){} });
@@ -346,6 +346,8 @@ function onMsg(d){
       addLog(`${d.name} joined the room.`,'good');
       spawnRipple(Math.random()*innerWidth,Math.random()*innerHeight,'good');
       sendMsg({type:'hello',name:myName,avatar:myAvatar,strikes:myStrikes,elapsed:myElapsed()});
+    } else if(d.reintro){
+      sendMsg({type:'hello',name:myName,avatar:myAvatar,strikes:myStrikes,elapsed:myElapsed()});
     }
   } else if(d.type==='bye'){
     const name=peers[them]?.name||'Someone';
@@ -353,7 +355,9 @@ function onMsg(d){
     addLog(`${name} left the room.`);
     spawnRipple(Math.random()*innerWidth,Math.random()*innerHeight);
   } else if(d.type==='strike'){
+    if(!peers[them] && d.name){ peers[them]={name:d.name,avatar:d.avatar||'🧑‍💻',strikes:0,lastSeen:Date.now(),startAt:Date.now()-(d.elapsed||0)*1000,distracted:false}; }
     if(peers[them]){
+      if(d.ts){ if(d.ts<=(peers[them]._lastStrikeTs||0)) return; peers[them]._lastStrikeTs=d.ts; }
       peers[them].strikes=(peers[them].strikes||0)+1;
       peers[them].lastSeen=Date.now();
       renderSeats();
@@ -396,7 +400,7 @@ checkReady();
 $('joinBtn').onclick=()=>{
   myName=$('nameInput').value.trim()||'Anon';
   myAvatar=randAvatar();
-  myId=Math.random().toString(36).slice(2);
+  myId=getUID();
   const code=$('codeInput').value.trim().toUpperCase();
   joinRoom(code);
 };
@@ -405,23 +409,32 @@ $('joinBtn').onclick=()=>{
    ROOM JOIN / LEAVE
 ═══════════════════════════════════════════════ */
 let focusBonusTimer=null;
-function joinRoom(code){
-  inRoom=true; myStrikes=0; myStart=Date.now(); peers={};
+function joinRoom(code, resume=false){
+  inRoom=true;
+  if(!resume){ myStrikes=0; myStart=Date.now(); }
+  peers={};
+  sessSet({code,name:myName,avatar:myAvatar,start:myStart,strikes:myStrikes,bonusGiven:resume?(sessGet()?.bonusGiven||false):false,last:Date.now()});
+  store.set('maatram_room_alive',String(Date.now()));
   clearTimeout(focusBonusTimer);
-  focusBonusTimer=setTimeout(()=>{ if(inRoom) window.maatramAward(20,'15 min in the room'); },15*60*1000);
+  const bonusIn=Math.max(0, myStart+15*60*1000-Date.now());
+  focusBonusTimer=setTimeout(()=>{ if(inRoom && !(sessGet()?.bonusGiven)){ window.maatramAward(20,'15 min in the room'); sessPatch({bonusGiven:true}); } },bonusIn);
   $('lobby').style.display='none';
   $('room').style.display='block';
   $('roomCodeDisplay').textContent=code;
-  addLog(`You joined as ${myName}.`,'good');
+  addLog(resume?`Welcome back, ${myName} — session continued.`:`You joined as ${myName}.`,'good');
   renderSeats();
   connect(code);
-  clockTick=setInterval(()=>{ renderTimes(); if((Date.now()/1000|0)%3===0) sendMsg({type:'ping',elapsed:myElapsed()}); },1000);
+  clockTick=setInterval(()=>{ renderTimes();
+    store.set('maatram_room_alive',String(Date.now()));
+    sessPatch({last:Date.now(),strikes:myStrikes});
+    if((Date.now()/1000|0)%3===0) sendMsg({type:'ping',elapsed:myElapsed()}); },1000);
   spawnRipple(innerWidth/2,innerHeight/2,'good');
 }
 
 function leaveRoom(kicked=false){
   if(!inRoom) return;
   inRoom=false;
+  sessDel(); store.del('maatram_room_alive');
   clearTimeout(focusBonusTimer);
   if(kicked) window.maatramAward(-30,'Struck out');
   sendMsg({type:'bye',name:myName});
@@ -486,13 +499,21 @@ function addLog(text,cls){
    STRIKE (from App Gate sync via localStorage + BroadcastChannel)
 ═══════════════════════════════════════════════ */
 const store=(()=>{try{localStorage.setItem('_t','1');localStorage.removeItem('_t');return{get:k=>localStorage.getItem(k),set:(k,v)=>localStorage.setItem(k,v),del:k=>localStorage.removeItem(k)};}catch(e){const m={};return{get:k=>m[k]??null,set:(k,v)=>m[k]=v,del:k=>delete m[k]};}})();
+/* persistent identity + resumable session (so App Gate visits don't disconnect you) */
+function getUID(){let u=store.get('maatram_room_uid');if(!u){u=Math.random().toString(36).slice(2);store.set('maatram_room_uid',u);}return u;}
+const SKEY='maatram_room_session';
+function sessGet(){try{return JSON.parse(store.get(SKEY)||'null')}catch(_){return null}}
+function sessSet(o){try{store.set(SKEY,JSON.stringify(o))}catch(_){}}
+function sessPatch(p){const s=sessGet();if(s)sessSet(Object.assign(s,p));}
+function sessDel(){try{store.del(SKEY)}catch(_){}}
 let lastSocialTs=+store.get('maatram_social_seen')||0;
 
-function handleStrikeEvent(app){
+function handleStrikeEvent(app,ts){
   if(!inRoom) return;
   const first=myStrikes===0;
   myStrikes++;
-  sendMsg({type:'strike',app});
+  sessPatch({strikes:myStrikes,last:Date.now()});
+  sendMsg({type:'strike',app,ts:ts||Date.now(),name:myName,avatar:myAvatar,elapsed:myElapsed()});
   if(first) addLog('👀 You got distracted for the first time!','bad');
   renderSeats();
   addLog(`⚡ Strike ${myStrikes}/3 — you opened ${app} on App Gate.`,'bad');
@@ -502,16 +523,30 @@ function handleStrikeEvent(app){
 
 try{
   const bc=new BroadcastChannel('maatram');
-  bc.onmessage=e=>{ if(e.data?.type==='social_open'&&e.data.ts>lastSocialTs){lastSocialTs=e.data.ts;store.set('maatram_social_seen',lastSocialTs);handleStrikeEvent(e.data.app);} };
+  bc.onmessage=e=>{ if(e.data?.type==='social_open'&&e.data.ts>lastSocialTs){lastSocialTs=e.data.ts;store.set('maatram_social_seen',lastSocialTs);handleStrikeEvent(e.data.app,e.data.ts);} };
 }catch(_){}
 addEventListener('storage',e=>{ if(e.key==='maatram_social_open') checkStored(); });
 /* all-in-one: strikes relayed by the shell (works even when storage is sandboxed) */
 addEventListener('message',e=>{
   const r=e.data&&e.data.maatramRelay;
-  if(r&&r.type==='social_open'&&r.ts>lastSocialTs){lastSocialTs=r.ts;handleStrikeEvent(r.app);}
+  if(r&&r.type==='social_open'&&r.ts>lastSocialTs){lastSocialTs=r.ts;handleStrikeEvent(r.app,r.ts);}
 });
 setInterval(checkStored,1500);
-function checkStored(){try{const raw=store.get('maatram_social_open');if(!raw)return;const ev=JSON.parse(raw);if(ev.ts>lastSocialTs){lastSocialTs=ev.ts;store.set('maatram_social_seen',lastSocialTs);handleStrikeEvent(ev.app);}}catch(_){}}
+function checkStored(){try{const raw=store.get('maatram_social_open');if(!raw)return;const ev=JSON.parse(raw);if(ev.ts>lastSocialTs){lastSocialTs=ev.ts;store.set('maatram_social_seen',lastSocialTs);handleStrikeEvent(ev.app,ev.ts);}}catch(_){}}
+
+/* ═══════════════════════════════════════════════
+   AUTO-RESUME — coming back from another page rejoins you seamlessly
+═══════════════════════════════════════════════ */
+(function(){
+  try{
+    const s=sessGet(); if(!s||!s.code) return;
+    if(Date.now()-(s.last||0)>5*60*1000){ sessDel(); return; }   // stale — start fresh
+    myId=getUID(); myName=s.name||'Anon'; myAvatar=s.avatar||randAvatar();
+    myStart=s.start||Date.now(); myStrikes=s.strikes||0;
+    joinRoom(s.code,true);
+    if(myStrikes>=3){ $('kicked').classList.add('show'); }
+  }catch(_){}
+})();
 
 /* ═══════════════════════════════════════════════
    CHAT
