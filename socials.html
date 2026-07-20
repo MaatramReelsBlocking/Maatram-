@@ -83,6 +83,31 @@
 @media(max-width:860px){#mnav{overflow-x:auto;scrollbar-width:none}#mnav::-webkit-scrollbar{display:none}
   #mnav .mn-logo b{display:none}#mnavChip .nm{display:none}}
 body{padding-top:52px!important}
+
+  /* contact / feedback */
+  .contact{margin-top:46px;border:1px solid var(--stroke);background:var(--card);border-radius:22px;
+    padding:30px 28px;backdrop-filter:blur(8px)}
+  .contact h3{font-family:var(--font-display,inherit);font-size:20px;font-weight:800;letter-spacing:1px;
+    margin:0 0 6px;background:linear-gradient(90deg,#2fe38f,#37b6ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .contact .c-sub{color:rgba(214,238,229,.65);font-size:13.5px;margin-bottom:20px}
+  .c-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+  @media(max-width:720px){.c-grid{grid-template-columns:1fr}}
+  .c-ways a{display:flex;align-items:center;gap:12px;padding:13px 15px;border-radius:14px;
+    border:1px solid var(--stroke);color:#eafff6;text-decoration:none;font-size:14px;margin-bottom:12px;transition:all .3s}
+  .c-ways a:hover{border-color:rgba(47,227,143,.5);transform:translateX(4px);background:rgba(47,227,143,.06)}
+  .c-ways .cw-ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;flex-shrink:0;
+    background:linear-gradient(135deg,#2fe38f,#37b6ff);font-size:17px}
+  .c-ways b{display:block;font-size:14px}
+  .c-ways span{display:block;font-size:12px;color:rgba(214,238,229,.6)}
+  .c-form textarea,.c-form input{width:100%;box-sizing:border-box;padding:12px 14px;border-radius:13px;
+    border:1px solid var(--stroke);background:rgba(255,255,255,.04);color:#eafff6;font-family:inherit;font-size:14px;
+    outline:none;transition:border .3s}
+  .c-form input{margin-bottom:12px}
+  .c-form textarea{min-height:110px;resize:vertical;margin-bottom:12px}
+  .c-form textarea:focus,.c-form input:focus{border-color:rgba(47,227,143,.55)}
+  .c-form button{padding:12px 28px;border:none;border-radius:100px;cursor:pointer;font-weight:800;font-size:13px;
+    letter-spacing:1px;text-transform:uppercase;color:#04120f;background:linear-gradient(90deg,#2fe38f,#37b6ff);transition:transform .25s}
+  .c-form button:hover{transform:scale(1.04)}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -154,10 +179,36 @@ body{padding-top:52px!important}
     </a>
   </div>
 
+  <section class="contact" id="contact">
+    <h3>Contact Us / Feedback</h3>
+    <p class="c-sub">Found a bug, have an idea, or just want to say hi? We read everything.</p>
+    <div class="c-grid">
+      <div class="c-ways">
+        <a href="mailto:maatram97@gmail.com"><span class="cw-ic">✉️</span><span><b>Email</b><span>maatram97@gmail.com</span></span></a>
+        <a href="tel:+919789488896"><span class="cw-ic">📞</span><span><b>Phone</b><span>+91 97894 88896</span></span></a>
+      </div>
+      <div class="c-form">
+        <input id="fbName" type="text" placeholder="Your name (optional)">
+        <textarea id="fbMsg" placeholder="Type your message or feedback…"></textarea>
+        <button id="fbSend">Send message</button>
+      </div>
+    </div>
+  </section>
+
   <footer>MAATRAM · <b>Action ⟹ Value</b> · Team Maatram, SSVM School of Excellence</footer>
 </div>
 
 <script>
+
+/* contact form → opens a pre-filled email to us */
+document.getElementById('fbSend').addEventListener('click',()=>{
+  const name=document.getElementById('fbName').value.trim();
+  const msg=document.getElementById('fbMsg').value.trim();
+  if(!msg){ document.getElementById('fbMsg').focus(); return; }
+  const subject=encodeURIComponent('Maatram feedback'+(name?' — '+name:''));
+  const body=encodeURIComponent(msg+(name?'\n\n— '+name:''));
+  location.href='mailto:maatram97@gmail.com?subject='+subject+'&body='+body;
+});
 /* staggered card entrance */
 document.querySelectorAll('.soc').forEach((c,i)=>setTimeout(()=>c.classList.add('in'),150+i*120));
 

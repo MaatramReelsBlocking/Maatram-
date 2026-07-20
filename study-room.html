@@ -416,8 +416,8 @@ function joinRoom(code, resume=false){
   sessSet({code,name:myName,avatar:myAvatar,start:myStart,strikes:myStrikes,bonusGiven:resume?(sessGet()?.bonusGiven||false):false,last:Date.now()});
   store.set('maatram_room_alive',String(Date.now()));
   clearTimeout(focusBonusTimer);
-  const bonusIn=Math.max(0, myStart+15*60*1000-Date.now());
-  focusBonusTimer=setTimeout(()=>{ if(inRoom && !(sessGet()?.bonusGiven)){ window.maatramAward(20,'15 min in the room'); sessPatch({bonusGiven:true}); } },bonusIn);
+  const bonusIn=Math.max(0, myStart+10*60*1000-Date.now());
+  focusBonusTimer=setTimeout(()=>{ if(inRoom && !(sessGet()?.bonusGiven)){ window.maatramAward(10,'10 min in the room'); sessPatch({bonusGiven:true}); } },bonusIn);
   $('lobby').style.display='none';
   $('room').style.display='block';
   $('roomCodeDisplay').textContent=code;

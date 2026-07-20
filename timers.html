@@ -138,8 +138,10 @@
   .m-name{ font-size:13px; font-weight:500; letter-spacing:-.01em; }
   .m-split{ font-family:var(--mono); font-size:11px; color:var(--muted);
             margin-top:4px; font-variant-numeric:tabular-nums; }
-  .m-pts{ position:absolute; top:15px; right:16px; font-family:var(--mono);
-          font-size:10px; font-weight:500; color:var(--m); opacity:.9; }
+  .m-pts{ position:absolute; top:12px; right:12px; font-family:var(--mono);
+          font-size:10.5px; font-weight:800; color:#ff5d73; opacity:1;
+          padding:3px 8px; border-radius:100px; border:1px solid rgba(255,93,115,.45);
+          background:rgba(255,93,115,.1); }
 
   /* ================= stage ================= */
   .stage{ text-align:center; padding-top:var(--s5); }
@@ -271,6 +273,21 @@
   #mnav .mn-logo b{display:none}#mnavChip .nm{display:none}}
 body{padding-top:52px!important}
 
+
+  /* mode info buttons */
+  .info-btn{position:relative;display:inline-grid;place-items:center;width:17px;height:17px;margin-left:6px;
+    border-radius:50%;border:1px solid rgba(255,255,255,.35);font-size:10px;font-style:italic;font-weight:800;
+    color:rgba(255,255,255,.7);cursor:help;vertical-align:middle}
+  .info-btn:hover,.info-btn:focus{border-color:var(--accent,#2fe38f);color:#eafff6}
+  .info-tip{position:absolute;bottom:26px;left:50%;transform:translateX(-50%) translateY(6px);width:280px;
+    padding:14px 16px;border-radius:14px;background:rgba(6,18,15,.97);border:1px solid rgba(47,227,143,.3);
+    box-shadow:0 18px 50px -12px rgba(0,0,0,.8);font-size:12px;line-height:1.55;color:#cfe9dd;text-align:left;
+    font-weight:400;font-style:normal;text-transform:none;letter-spacing:.2px;
+    opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:650}
+  .info-tip b{display:block;color:#eafff6;margin-bottom:6px}
+  .info-btn:hover .info-tip,.info-btn:focus .info-tip{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
+  @media(max-width:560px){.info-tip{left:auto;right:-10px;transform:translateY(6px)}
+    .info-btn:hover .info-tip,.info-btn:focus .info-tip{transform:translateY(0)}}
 </style>
 <script>
 /* stub so feature code can always call it; hosted engine overrides */
@@ -323,13 +340,13 @@ window.maatramAward=window.maatramAward||function(pts,reason){
 
   <div class="modes">
     <button class="mode" data-mode="pomodoro" aria-pressed="true" data-r>
-      <span class="m-pts">+25</span>
-      <div class="m-name">Pomodoro</div>
+      <span class="m-pts">+25 pts</span>
+      <div class="m-name">Pomodoro <span class="info-btn" tabindex="0" aria-label="About Pomodoro">i<span class="info-tip"><b>Pomodoro — 25 min focus / 5 min break</b>Short, repeatable sprints that beat procrastination. Benefits: easier to start, trains sustained attention, frequent breaks prevent burnout, and each finished sprint gives a quick win.<br><br><b>Points:</b> +25 pts per completed focus session, added to your leaderboard total.</span></span></div>
       <div class="m-split">25 / 5</div>
     </button>
     <button class="mode" data-mode="deep" aria-pressed="false" data-r>
-      <span class="m-pts">+100</span>
-      <div class="m-name">Deep Work</div>
+      <span class="m-pts">+100 pts</span>
+      <div class="m-name">Deep Work <span class="info-btn" tabindex="0" aria-label="About Deep Work">i<span class="info-tip"><b>Deep Work — 90 min focus / 15 min break</b>One long, distraction-free block for hard tasks. Benefits: reach true flow state, finish demanding work faster, build serious concentration stamina — the skill social media erodes.<br><br><b>Points:</b> +100 pts per completed session — the biggest single reward in Maatram.</span></span></div>
       <div class="m-split">90 / 15</div>
     </button>
   </div>
@@ -584,7 +601,7 @@ function chime() {
 }
 
 /* ============ clock ============ */
-const stop = () => { S.running = false; clearInterval(S.tick); S.tick = null; };
+const stop = () => { S.running = false; clearInterval(S.tick); S.tick = null; saveT(); };
 
 function start() {
   if (S.running) return;
@@ -594,13 +611,14 @@ function start() {
     if (S.left <= 0) { S.left = 0; done(); }
     paint();
   }, 1000);
+  saveT();
   paint();
 }
 
 function done() {
   stop(); chime();
-  if (S.phase === 'focus') { S.sessions++; S.points += cfg().pts; awardPoints(cfg().pts); powerup(); }
-  else { S.phase = 'focus'; S.left = cfg().focus; paint(); }
+  if (S.phase === 'focus') { S.sessions++; S.points += cfg().pts; awardPoints(cfg().pts); saveT(); powerup(); }
+  else { S.phase = 'focus'; S.left = cfg().focus; saveT(); paint(); }
 }
 
 /* ============ power-up ============ */
@@ -641,7 +659,7 @@ function closePU(takeBreak) {
     S.phase = takeBreak ? 'break' : 'focus';
     S.left  = takeBreak ? cfg().brk : cfg().focus;
     paint();
-    if (takeBreak) start();
+    saveT(); if (takeBreak) start();
     el.go.focus();
   };
   if (!LIVE) { finish(); return; }
@@ -650,12 +668,13 @@ function closePU(takeBreak) {
 
 /* ============ events ============ */
 document.querySelectorAll('.mode').forEach(btn => {
-  btn.addEventListener('click', () => {
+  btn.addEventListener('click', (ev) => {
+    if (ev.target.closest('.info-btn')) return;
     const next = btn.dataset.mode;
     if (next === S.mode) return;
     if (S.running && !confirm('Switch mode? This session is dropped and earns no points.')) return;
     stop();
-    S.mode = next; S.phase = 'focus'; S.left = cfg().focus;
+    S.mode = next; S.phase = 'focus'; S.left = cfg().focus; saveT();
     document.querySelectorAll('.mode').forEach(b =>
       b.setAttribute('aria-pressed', String(b.dataset.mode === next)));
     accent(); paint();
@@ -664,7 +683,7 @@ document.querySelectorAll('.mode').forEach(btn => {
 });
 
 el.go.addEventListener('click',      () => S.running ? (stop(), paint()) : start());
-el.reset.addEventListener('click',   () => { stop(); S.phase = 'focus'; S.left = cfg().focus; paint(); });
+el.reset.addEventListener('click',   () => { stop(); S.phase = 'focus'; S.left = cfg().focus; saveT(); paint(); });
 el.puBreak.addEventListener('click', () => closePU(true));
 el.puSkip.addEventListener('click',  () => closePU(false));
 
@@ -675,11 +694,38 @@ addEventListener('keydown', e => {
   if (e.key.toLowerCase() === 'r') el.reset.click();
 });
 
-addEventListener('beforeunload', e => {
-  if (S.running && S.phase === 'focus') { e.preventDefault(); e.returnValue = ''; }
-});
+/* timer persists across pages — no leave warning needed */
 
+
+/* ============ persistence: timer survives navigation ============ */
+const TKEY='maatram_timer_state';
+function saveT(){
+  try{localStorage.setItem(TKEY,JSON.stringify({
+    mode:S.mode,phase:S.phase,left:S.left,running:S.running,
+    endTs:S.running?Date.now()+S.left*1000:0,
+    sessions:S.sessions,points:S.points,ts:Date.now()}));}catch(_){}
+}
+function restoreT(){
+  let d=null; try{d=JSON.parse(localStorage.getItem(TKEY)||'null');}catch(_){}
+  if(!d||!MODES[d.mode]) return;
+  S.mode=d.mode; S.sessions=d.sessions||0; S.points=d.points||0;
+  S.phase=d.phase==='break'?'break':'focus';
+  document.querySelectorAll('.mode').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===S.mode)));
+  if(d.running&&d.endTs){
+    const left=Math.round((d.endTs-Date.now())/1000);
+    if(left>0){ S.left=left; accent(); paint(); start(); return; }
+    /* finished while away — award it */
+    S.left=0; accent();
+    if(S.phase==='focus'){ S.sessions++; S.points+=cfg().pts; awardPoints(cfg().pts); saveT(); paint(); powerup(); return; }
+    S.phase='focus'; S.left=cfg().focus;
+  } else {
+    S.left=Math.min(d.left??total(), total());
+  }
+  accent(); paint();
+}
+setInterval(()=>{ if(S.running) saveT(); },5000);
 accent();
+restoreT();
 paint();
 enter();
 drift();

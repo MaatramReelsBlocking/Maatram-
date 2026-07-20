@@ -137,9 +137,9 @@
     border-radius:26px;
     backdrop-filter:blur(16px);
     padding:38px 34px;
-    display:grid;grid-template-columns:1fr auto;gap:34px;align-items:center;
+    display:grid;grid-template-columns:1fr auto auto;gap:34px;align-items:center;
   }
-  @media(max-width:760px){.panel{grid-template-columns:1fr}}
+  @media(max-width:980px){.panel{grid-template-columns:1fr}}
   .panel h3{
     font-family:var(--font-display);font-size:24px;font-weight:700;margin-bottom:8px;
     display:flex;align-items:center;gap:10px;
@@ -236,6 +236,17 @@
   #mnav .mn-logo b{display:none}#mnavChip .nm{display:none}}
 body{padding-top:52px!important}
 
+
+  /* reward table */
+  .reward-box{border:1px solid rgba(255,209,102,.25);background:rgba(255,209,102,.05);border-radius:18px;
+    padding:18px 20px;min-width:200px}
+  .reward-box h4{font-family:var(--font-display);font-size:12px;font-weight:800;letter-spacing:1.5px;
+    text-transform:uppercase;color:#ffd166;margin:0 0 4px}
+  .reward-box .rb-note{font-size:11.5px;color:var(--dim);margin-bottom:12px}
+  .reward-box table{width:100%;border-collapse:collapse;font-size:13px}
+  .reward-box td{padding:5px 0;color:#cfe9dd}
+  .reward-box td:last-child{text-align:right;font-weight:800;color:#ffd166}
+  .reward-box tr+tr td{border-top:1px dashed rgba(255,255,255,.08)}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -352,6 +363,19 @@ window.maatramAward=window.maatramAward||function(pts,reason){
         <button class="chip" data-min="90">90 min</button>
       </div>
     </div>
+    <div class="reward-box">
+      <h4>Lock &amp; Earn</h4>
+      <div class="rb-note">+10 pts for every 5 minutes you stay locked</div>
+      <table>
+        <tr><td>5 min</td><td>+10 pts</td></tr>
+        <tr><td>10 min</td><td>+20 pts</td></tr>
+        <tr><td>15 min</td><td>+30 pts</td></tr>
+        <tr><td>25 min</td><td>+50 pts</td></tr>
+        <tr><td>45 min</td><td>+90 pts</td></tr>
+        <tr><td>60 min</td><td>+120 pts</td></tr>
+        <tr><td>90 min</td><td>+180 pts</td></tr>
+      </table>
+    </div>
     <div class="lock-zone">
       <div class="ring-wrap">
         <svg class="ring" viewBox="0 0 150 150">
@@ -451,11 +475,16 @@ function engage(endTs, totalSec){
   tick=setInterval(update,250); update();
 }
 
+function claimLock(end,total){
+  /* +10 for every full 5 minutes survived — awarded exactly once per lock */
+  if(store.get('maatram_lock_claimed')===String(end)) return;
+  store.set('maatram_lock_claimed', String(end));
+  const earned=Math.floor(total/300)*10;
+  if(earned>0) window.maatramAward(earned,'Hard Lock '+Math.floor(total/60)+'m');
+}
 function release(){
   clearInterval(tick); tick=null;
-  /* +10 for every full 5 minutes survived */
-  const earned=Math.floor(lockTotal/300)*10;
-  if(earned>0) window.maatramAward(earned,'Hard Lock '+Math.floor(lockTotal/60)+'m');
+  claimLock(lockEnd, lockTotal);
   store.del('maatram_lock_end'); store.del('maatram_lock_total');
   body.classList.remove('locked');
   pill.textContent='Gate open'; pill.classList.remove('locked');
@@ -499,14 +528,20 @@ grid.addEventListener('click', e=>{
     try{ store.set('maatram_social_open', JSON.stringify(evt)); }catch(_){}
     try{ parent.postMessage({maatramRelay:{type:'social_open', ...evt}},'*'); }catch(_){}
     try{ ROOM.strike(evt.app, evt.ts); }catch(_){}
-    window.maatramAward(-25,evt.app+' opened');
+    window.maatramAward(-10,evt.app+' opened');
   }
 }, true);
 
 /* restore lock across refresh */
 (function(){
   const end=+store.get('maatram_lock_end'), total=+store.get('maatram_lock_total');
-  if(end && total && end>Date.now()) engage(end,total);
+  if(end && total){
+    if(end>Date.now()) engage(end,total);
+    else{ /* lock finished while page was closed — pay it out now */
+      claimLock(end,total);
+      store.del('maatram_lock_end'); store.del('maatram_lock_total');
+    }
+  }
 })();
 
 /* spotlight follow on cards */
