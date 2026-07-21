@@ -1,6 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>
+/* ══ MAATRAM Performance Mode — shared across all pages ══
+   Sets window.MAATRAM_PERF (true = performance/low-lag mode) BEFORE any
+   page canvas code runs, so each page's LITE flag can honor it.
+   Default: ON for weak/old devices, user can override and it persists. */
+(function(){
+  var KEY='maatram_perf';
+  var weak = matchMedia('(pointer:coarse)').matches
+          || innerWidth<820
+          || (navigator.hardwareConcurrency||8)<=4
+          || (navigator.deviceMemory||8)<=4;
+  var saved=null; try{saved=localStorage.getItem(KEY);}catch(_){}
+  var on = saved===null ? weak : saved==='1';
+  window.MAATRAM_PERF = on;
+  try{ if(saved===null) localStorage.setItem(KEY, on?'1':'0'); }catch(_){}
+  document.documentElement.classList.toggle('perf', on);
+})();
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Maatram — Study Room</title>
@@ -178,6 +197,21 @@
 @media(max-width:860px){#mnav{overflow-x:auto;scrollbar-width:none}#mnav::-webkit-scrollbar{display:none}
   #mnav .mn-logo b{display:none}#mnavChip .nm{display:none}}
 body{padding-top:52px!important}
+
+  /* ══ performance-mode toggle button (all pages) ══ */
+  #perfBtn{position:fixed;bottom:18px;left:18px;z-index:900;display:flex;align-items:center;gap:8px;
+    padding:8px 14px;border-radius:100px;border:1px solid rgba(255,255,255,.18);cursor:pointer;
+    background:rgba(6,18,15,.8);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#cfe9dd;
+    font-family:inherit;font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+    transition:border-color .25s,color .25s}
+  #perfBtn:hover{border-color:rgba(47,227,143,.55);color:#eafff6}
+  #perfBtn .pf-ic{font-size:13px;line-height:1}
+  #perfBtn .pf-sw{width:28px;height:15px;border-radius:100px;border:1px solid rgba(255,255,255,.3);position:relative;transition:all .25s;flex-shrink:0}
+  #perfBtn .pf-sw::after{content:"";position:absolute;top:1.5px;left:2px;width:10px;height:10px;border-radius:50%;background:#cfe9dd;transition:all .25s}
+  html.perf #perfBtn .pf-sw{background:linear-gradient(90deg,#2fe38f,#37b6ff);border-color:transparent}
+  html.perf #perfBtn .pf-sw::after{left:14px;background:#04120f}
+  html.perf #perfBtn{border-color:rgba(47,227,143,.4)}
+  @media(pointer:coarse){#perfBtn{bottom:12px;left:12px}}
 
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -581,7 +615,7 @@ setBadge('','Connecting…');
 ═══════════════════════════════════════════════ */
 const cv=$('aurora'),ctx=cv.getContext('2d');
 let W,H,DPR;
-const LITE=matchMedia('(pointer:coarse)').matches||innerWidth<820||(navigator.hardwareConcurrency||8)<=4;
+const LITE=(window.MAATRAM_PERF!==undefined)?window.MAATRAM_PERF:(matchMedia('(pointer:coarse)').matches||innerWidth<820||(navigator.hardwareConcurrency||8)<=4);
 function resize(){DPR=LITE?1:Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;cv.style.width=W+'px';cv.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0);}
 resize();addEventListener('resize',resize);
 const mouse={x:innerWidth/2,y:innerHeight/2};
@@ -590,7 +624,7 @@ let ripples=[];
 function spawnRipple(x,y,kind){ripples.push({x,y,r:0,kind,life:1});}
 addEventListener('pointerdown',e=>{if(!e.target.closest('button,input,a'))spawnRipple(e.clientX,e.clientY);});
 const ribbons=[{base:.28,amp:50,speed:.00038,phase:0,hue:158,alpha:.10},{base:.52,amp:64,speed:.00027,phase:2.1,hue:200,alpha:.09},{base:.76,amp:42,speed:.00048,phase:4.4,hue:178,alpha:.08}];
-const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reduced=(window.MAATRAM_PERF===true) || matchMedia('(prefers-reduced-motion: reduce)').matches;
 function frame(t){
   ctx.clearRect(0,0,W,H);
   const active=inRoom;
@@ -702,5 +736,27 @@ if(!reduced)requestAnimationFrame(frame);else frame(0);
   }catch(e){console.warn('nav auth',e);}
 })();
 </script>
+<button id="perfBtn" aria-pressed="false" title="Toggle performance mode (less animation, zero lag)">
+  <span class="pf-ic">⚡</span><span class="pf-sw"></span><span id="perfLbl">Performance</span>
+</button>
+<script>
+/* ══ performance toggle behavior ══ */
+(function(){
+  var KEY='maatram_perf', btn=document.getElementById('perfBtn'), lbl=document.getElementById('perfLbl');
+  function paint(on){
+    document.documentElement.classList.toggle('perf',on);
+    btn.setAttribute('aria-pressed',String(on));
+    lbl.textContent = on ? 'Performance: On' : 'Performance';
+  }
+  paint(!!window.MAATRAM_PERF);
+  btn.addEventListener('click',function(){
+    var on=!(localStorage.getItem(KEY)==='1');
+    try{localStorage.setItem(KEY,on?'1':'0');}catch(_){}
+    /* reload so canvases rebuild at the new detail level — clean + reliable */
+    location.reload();
+  });
+})();
+</script>
+
 </body>
 </html>
