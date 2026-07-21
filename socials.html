@@ -33,6 +33,8 @@
   .wrap{position:relative;z-index:2;max-width:900px;margin:0 auto;padding:46px 20px 90px}
 
   .hero{text-align:center;margin-bottom:48px}
+  .hero-logo{width:min(420px,80vw);height:auto;display:block;margin:0 auto 22px;
+    filter:drop-shadow(0 12px 30px rgba(0,0,0,.5))}
   .hero h2{font-family:var(--font-display);font-weight:900;font-size:clamp(30px,6vw,52px);letter-spacing:1px;
     text-shadow:0 0 22px rgba(47,227,143,.7),0 0 60px rgba(55,182,255,.35)}
   .hero p{color:var(--dim);font-size:13px;letter-spacing:1.6px;text-transform:uppercase;margin-top:8px}
@@ -74,6 +76,9 @@
   border-bottom:1px solid rgba(47,227,143,.15);font-family:'Sora','Inter',system-ui,sans-serif;cursor:auto}
 #mnav *{cursor:pointer}
 #mnav .mn-logo{display:flex;align-items:center;gap:8px;margin-right:10px;text-decoration:none;color:#eafff6}
+#mnav .mn-img{height:34px;width:auto;display:block}
+@media(max-width:560px){#mnav .mn-img{height:28px}}
+
 #mnav .mn-mark{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#2fe38f,#37b6ff);
   display:grid;place-items:center;font-weight:800;color:#04120f;font-size:14px}
 #mnav .mn-logo b{font-size:13px;font-weight:700;letter-spacing:.4px}
@@ -149,7 +154,7 @@ body{padding-top:52px!important}
 </head>
 <body>
 <nav id="mnav">
-  <a class="mn-logo" href="index.html"><span class="mn-mark">M</span><b>MAATRAM</b></a>
+  <a class="mn-logo" href="index.html"><img class="mn-img" src="logo-banner.png" alt="MAATRAM" decoding="async"></a>
   <span class="mn-spacer"></span><a class="mn-link" href="index.html">Home</a><a class="mn-link" href="timers.html">Timers</a><a class="mn-link" href="app-gate.html">App Gate</a><a class="mn-link" href="study-room.html">Study Room</a><a class="mn-link" href="stats.html">Stats</a><a class="mn-link" href="leaderboard.html">Leaderboard</a><a class="mn-link active" href="socials.html">Socials</a>
   <div id="mnavAuth">
     <a id="mnavIn" href="login.html">Sign in</a>
@@ -167,6 +172,7 @@ body{padding-top:52px!important}
 <canvas id="bg"></canvas>
 <div class="wrap">
   <div class="hero">
+    <img class="hero-logo" src="logo-full.png" alt="MAATRAM — Bringing a change in you" decoding="async">
     <h2>FIND US EVERYWHERE</h2>
     <p>Follow the change · @maatram_360</p>
   </div>

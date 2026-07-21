@@ -257,6 +257,18 @@ body{padding-top:52px!important}
 
   html.perf #cursor{display:none!important}
   html.perf body,html.perf #enter,html.perf .fcard{cursor:auto!important}
+
+  #menuBack{position:fixed;top:18px;left:20px;z-index:80;display:flex;align-items:center;gap:7px;
+    padding:9px 16px 9px 13px;border-radius:100px;border:1px solid rgba(255,255,255,.22);cursor:pointer;
+    background:rgba(6,18,15,.82);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#eafff6;
+    font-family:inherit;font-size:13px;font-weight:800;letter-spacing:1px;opacity:0;pointer-events:none;
+    transition:opacity .4s,border-color .25s,transform .25s}
+  #menu.show #menuBack{opacity:1;pointer-events:auto}
+  #menuBack:hover{border-color:rgba(47,227,143,.6);transform:translateX(-3px)}
+  #menuBack span{font-weight:700}
+  #menu{cursor:pointer}          /* backdrop is clickable to go home */
+  .menu-in{cursor:auto}
+  html.perf #menuBack{cursor:pointer}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -315,6 +327,7 @@ body{padding-top:52px!important}
 <div class="bar" id="barB"></div>
 
 <div id="menu">
+  <button id="menuBack" aria-label="Back to home">← <span>Home</span></button>
   <div class="menu-in">
     <h2>CHOOSE YOUR WEAPON</h2>
     <p>FOUR TOOLS · ONE MISSION · LESS SCROLLING</p>
@@ -511,6 +524,19 @@ enterBtn.addEventListener('click',()=>{
   });
   setTimeout(()=>document.getElementById('menu').classList.add('show'),900);
 });
+
+
+/* ══ leave menu → back to home start screen ══ */
+(function(){
+  const menu=document.getElementById('menu');
+  function goHome(){ location.reload(); }   /* replay intro from the top */
+  document.getElementById('menuBack').addEventListener('click',goHome);
+  menu.addEventListener('click',e=>{        /* click backdrop, not a card/back btn */
+    if(e.target.closest('.fcard')||e.target.closest('.menu-in')||e.target.closest('#menuBack'))return;
+    goHome();
+  });
+  addEventListener('keydown',e=>{ if(e.key==='Escape'&&menu.classList.contains('show'))goHome(); });
+})();
 
 addEventListener('resize',fitAll);
 </script>
