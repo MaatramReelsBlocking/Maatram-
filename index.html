@@ -148,7 +148,11 @@
   /* ══ FEATURE MENU (after Enter) ══ */
   #menu{position:fixed;inset:0;z-index:70;display:grid;place-items:center;padding:20px;
     background:rgba(0,0,0,.55);backdrop-filter:blur(10px);
+    overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
     opacity:0;pointer-events:none;transition:opacity .6s ease}
+  @media(max-width:640px),(max-height:640px){
+    #menu{place-items:start center;padding:72px 16px 110px}
+  }
   #menu.show{opacity:1;pointer-events:auto}
   .menu-in{max-width:860px;width:100%;text-align:center}
   .menu-in h2{font-family:var(--font-display);font-weight:900;font-size:clamp(22px,4vw,36px);
@@ -210,32 +214,12 @@
 body{padding-top:52px!important}
 
 
-  /* ══ minimal mode (home only) ══ */
-  #minToggle{position:fixed;bottom:24px;right:30px;z-index:660;display:flex;align-items:center;gap:8px;
-    padding:9px 16px;border-radius:100px;border:1px solid rgba(255,255,255,.2);cursor:pointer;
-    background:rgba(6,18,15,.75);backdrop-filter:blur(8px);color:#cfe9dd;
-    font-family:inherit;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
-    transition:all .3s}
-  #minToggle:hover{border-color:rgba(47,227,143,.6);color:#eafff6}
-  #minToggle .sw{width:30px;height:16px;border-radius:100px;border:1px solid rgba(255,255,255,.3);position:relative;transition:all .3s}
-  #minToggle .sw::after{content:"";position:absolute;top:1.5px;left:2px;width:11px;height:11px;border-radius:50%;
-    background:#cfe9dd;transition:all .3s}
-  body.minimal #minToggle .sw{background:linear-gradient(90deg,#2fe38f,#37b6ff);border-color:transparent}
-  body.minimal #minToggle .sw::after{left:15px;background:#04120f}
-  @media(max-width:640px){#minToggle{bottom:16px;right:16px}.corner.br{display:none}}
 
-  /* what minimal mode hides / simplifies */
-  body.minimal #stars,body.minimal #swarm,body.minimal #fx,body.minimal .rings,
-  body.minimal #cursor,body.minimal .bar,body.minimal .hint,body.minimal .corner{display:none!important}
-  body.minimal{background:#050d0b;cursor:auto}
-  body.minimal *{animation:none!important;transition:none!important}
-  body.minimal .stack{position:static;min-height:52vh;padding-top:120px}
-  body.minimal .neon,body.minimal .neon *{text-shadow:none!important;filter:none!important;opacity:1!important;transform:none!important}
-  body.minimal .pre,body.minimal .slogan .w,body.minimal .jingle,body.minimal .under-glow{opacity:1!important;transform:none!important}
-  body.minimal .under-glow{box-shadow:none!important}
-  body.minimal #enter{opacity:1!important;transform:none!important}
-  body.minimal #menu{position:static;opacity:1;pointer-events:auto;background:transparent;backdrop-filter:none;padding:10px 20px 60px}
-  body.minimal .fcard{animation:none!important;box-shadow:none!important}
+  /* ══ mobile / touch adjustments ══ */
+  @media(pointer:coarse){
+    #cursor{display:none!important}
+    body,#enter,.fcard{cursor:auto!important}
+  }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -309,7 +293,7 @@ body{padding-top:52px!important}
 
 <div id="cursor"></div>
 
-<button id="minToggle" aria-pressed="false"><span class="sw"></span><span id="minLbl">Minimal</span></button>
+
 
 <script>
 /* ═════════ FX state FIRST (so nothing can touch it before it exists) ═════════ */
@@ -322,7 +306,8 @@ function shockwave(x,y){
 }
 
 /* ═════════ canvases ═════════ */
-const DPR=Math.min(devicePixelRatio||1,1.5);
+const LITE=matchMedia('(pointer:coarse)').matches||innerWidth<820||(navigator.hardwareConcurrency||8)<=4;
+const DPR=LITE?1:Math.min(devicePixelRatio||1,1.5);
 let W=0,H=0;
 const cvs={stars:document.getElementById('stars'),
   swarm:document.getElementById('swarm'),fx:document.getElementById('fx')};
@@ -348,7 +333,7 @@ const cur=document.getElementById('cursor');
 
 /* ═════════ SWARM: free-flying sprites that orbit the wordmark ═════════ */
 const SRGB={152:'rgb(47,227,143)',200:'rgb(55,182,255)',45:'rgb(255,209,102)',320:'rgb(255,110,199)',160:'rgb(120,235,190)',205:'rgb(140,205,255)'};
-const NS=Math.min(70,Math.floor(W/18));
+const NS=Math.min(LITE?26:70,Math.floor(W/18));
 const sw=[];
 for(let i=0;i<NS;i++){
   sw.push({a:Math.random()*6.283, rad:(0.18+Math.random()*0.42)*Math.min(W,H),
@@ -387,7 +372,7 @@ function drawSwarm(t){
 
 /* ═════════ STARFIELD ═════════ */
 const stars=[];
-for(let i=0;i<80;i++)stars.push({x:Math.random(),y:Math.random(),
+for(let i=0;i<(LITE?32:80);i++)stars.push({x:Math.random(),y:Math.random(),
   z:.3+Math.random()*.7,tw:Math.random()*7,hue:Math.random()<.5?160:205});
 function drawStars(){
   S.clearRect(0,0,W,H);
@@ -463,43 +448,11 @@ function start(){
 
 /* wait for fonts (with a safety timeout so we never hang) */
 
-/* ══ minimal mode toggle (home only) ══ */
-(function(){
-  const KEY='maatram_home_minimal';
-  const btn=document.getElementById('minToggle'), lbl=document.getElementById('minLbl');
-  function apply(on){
-    document.body.classList.toggle('minimal',on);
-    btn.setAttribute('aria-pressed',String(on));
-    lbl.textContent=on?'Animated':'Minimal';
-    if(on){ /* minimal = intro skipped, menu visible */
-      document.getElementById('menu').classList.add('show');
-      document.querySelectorAll('.bar').forEach(b=>b.style.display='none');
-      const st=document.querySelector('.stack'); if(st) st.style.display='';
-    }
-  }
-  let saved=false; try{saved=localStorage.getItem(KEY)==='1';}catch(_){}
-  if(saved) apply(true);
-  btn.addEventListener('click',()=>{
-    const on=!document.body.classList.contains('minimal');
-    try{localStorage.setItem(KEY,on?'1':'0');}catch(_){}
-    if(!on){ location.reload(); return; } /* back to animated → replay fresh */
-    apply(true);
-  });
-})();
-const RETURNING=(()=>{try{return sessionStorage.getItem('maatram_entered')==='1'||localStorage.getItem('maatram_home_minimal')==='1';}catch(_){return false;}})();
-if(RETURNING){
-  /* skip the intro — show the feature menu immediately */
-  document.getElementById('menu').classList.add('show');
-  document.querySelectorAll('.bar').forEach(b=>b.style.display='none');
-  if(!document.body.classList.contains('minimal')){
-    const st=document.querySelector('.stack'); if(st) st.style.display='none';
-  }
-}else{
   Promise.race([
     (document.fonts&&document.fonts.ready)||Promise.resolve(),
     new Promise(r=>setTimeout(r,1800))
   ]).then(()=>requestAnimationFrame(()=>requestAnimationFrame(start)));
-}
+
 
 /* enter hover cursor */
 const enterBtn=document.getElementById('enter');
@@ -510,7 +463,6 @@ document.addEventListener('pointerout',e=>{if(e.target.closest('.fcard'))documen
 
 /* Enter → burst + hook for redirect */
 enterBtn.addEventListener('click',()=>{
-  try{sessionStorage.setItem('maatram_entered','1');}catch(_){}
   for(let i=0;i<6;i++)setTimeout(()=>shockwave(Math.random()*W,Math.random()*H),i*110);
   letters.forEach((L,i)=>{
     L.style.transition='all .8s cubic-bezier(.6,-.3,.3,1)';

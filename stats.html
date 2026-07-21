@@ -344,7 +344,8 @@ renderStats();
 
 /* ═══════ BACKGROUND: drifting gradient orbs + twinkles + shooting stars ═══════ */
 const cv=$('dots'),ctx=cv.getContext('2d');
-const DPR=Math.min(devicePixelRatio||1,1.5);let W,H;
+const LITE=matchMedia('(pointer:coarse)').matches||innerWidth<820||(navigator.hardwareConcurrency||8)<=4;
+const DPR=LITE?1:Math.min(devicePixelRatio||1,1.5);let W,H;
 function fit(){W=Math.max(1,innerWidth);H=Math.max(1,innerHeight);
   cv.width=W*DPR;cv.height=H*DPR;cv.style.width=W+'px';cv.style.height=H+'px';
   ctx.setTransform(DPR,0,0,DPR,0,0);}

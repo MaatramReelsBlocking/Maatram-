@@ -200,21 +200,38 @@ body{padding-top:52px!important}
 
 <script>
 
-/* contact form → opens a pre-filled email to us */
-document.getElementById('fbSend').addEventListener('click',()=>{
+/* contact form → emails us directly in the background (FormSubmit), no redirect */
+document.getElementById('fbSend').addEventListener('click',async()=>{
+  const btn=document.getElementById('fbSend');
   const name=document.getElementById('fbName').value.trim();
   const msg=document.getElementById('fbMsg').value.trim();
   if(!msg){ document.getElementById('fbMsg').focus(); return; }
-  const subject=encodeURIComponent('Maatram feedback'+(name?' — '+name:''));
-  const body=encodeURIComponent(msg+(name?'\n\n— '+name:''));
-  location.href='mailto:maatram97@gmail.com?subject='+subject+'&body='+body;
+  btn.disabled=true; const orig=btn.textContent; btn.textContent='Sending…';
+  try{
+    const res=await fetch('https://formsubmit.co/ajax/maatram97@gmail.com',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({name:name||'Anonymous',message:msg,_subject:'Maatram feedback'+(name?' — '+name:'')})
+    });
+    if(!res.ok) throw new Error('send failed');
+    btn.textContent='Sent ✓';
+    document.getElementById('fbMsg').value=''; document.getElementById('fbName').value='';
+    setTimeout(()=>{btn.textContent=orig;btn.disabled=false;},2500);
+  }catch(_){
+    /* offline / blocked → fall back to the user's mail app */
+    btn.textContent=orig; btn.disabled=false;
+    const subject=encodeURIComponent('Maatram feedback'+(name?' — '+name:''));
+    const body=encodeURIComponent(msg+(name?'\n\n— '+name:''));
+    location.href='mailto:maatram97@gmail.com?subject='+subject+'&body='+body;
+  }
 });
 /* staggered card entrance */
 document.querySelectorAll('.soc').forEach((c,i)=>setTimeout(()=>c.classList.add('in'),150+i*120));
 
 /* ══ background: constellation network — nodes linking like a community ══ */
 const cv=document.getElementById('bg'),ctx=cv.getContext('2d');
-const DPR=Math.min(devicePixelRatio||1,1.5);let W,H;
+const LITE=matchMedia('(pointer:coarse)').matches||innerWidth<820||(navigator.hardwareConcurrency||8)<=4;
+const DPR=LITE?1:Math.min(devicePixelRatio||1,1.5);let W,H;
 function fit(){W=Math.max(1,innerWidth);H=Math.max(1,innerHeight);
   cv.width=W*DPR;cv.height=H*DPR;cv.style.width=W+'px';cv.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0);}
 fit();addEventListener('resize',fit);
