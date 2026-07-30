@@ -1,0 +1,36 @@
+# ─────────────────────────────────────────────
+#  Maatram — https://maatram-website.vercel.app
+#  Bringing a change in you
+# ─────────────────────────────────────────────
+
+User-agent: *
+Allow: /
+Disallow: /login.html
+Disallow: /theme.src.js
+Disallow: /SEO-README.md
+Disallow: /firestore.rules
+
+# Big AI/answer engines — explicitly welcome (helps AI-search visibility)
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+# Bad-manners scrapers that hammer small sites
+User-agent: AhrefsBot
+Crawl-delay: 10
+
+User-agent: SemrushBot
+Crawl-delay: 10
+
+User-agent: MJ12bot
+Crawl-delay: 10
+
+Sitemap: https://maatram-website.vercel.app/sitemap.xml
