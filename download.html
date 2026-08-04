@@ -3,65 +3,485 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Download Maatram | Maatram</title>
-<meta name="description" content="Download the Maatram Android app.">
+<title>Download the Maatram Android App | Maatram</title>
+<meta name="description" content="Download Maatram for Android — the free, open-source screen-time and focus app built by students. Version 1.0, 2.86 MB, Android 5.1 and above.">
 <link rel="canonical" href="https://maatram-website.vercel.app/download.html">
-<meta name="theme-color" content="#04120F">
-<link rel="icon" href="/favicon.ico">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+<meta name="theme-color" content="#06090B">
+<meta name="color-scheme" content="dark">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Maatram">
+<meta property="og:url" content="https://maatram-website.vercel.app/download.html">
+<meta property="og:title" content="Download the Maatram Android App">
+<meta property="og:description" content="Maatram for Android — version 1.0, 2.86 MB, Android 5.1 and above. Free and open source.">
+<meta property="og:image" content="https://maatram-website.vercel.app/og-image.png">
+<meta property="og:locale" content="en_IN">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@Maatram_360">
+<meta name="twitter:title" content="Download the Maatram Android App">
+<meta name="twitter:description" content="Maatram for Android — version 1.0, 2.86 MB, Android 5.1 and above. Free and open source.">
+<meta name="twitter:image" content="https://maatram-website.vercel.app/og-image.png">
+<link rel="icon" href="favicon.ico">
+<link rel="manifest" href="site.webmanifest">
 <script src="theme.js"></script>
 <style>
-:root{--bg:#04120F;--ink:#ECEFEE;--dim:#8FA3A0;--green:#2FE38F;--blue:#3FA9F5;
-  --line:rgba(255,255,255,.13)}
+:root{
+  --bg:#06090B; --panel:rgba(255,255,255,.045); --line:rgba(255,255,255,.13);
+  --ink:#ECEFEE; --dim:#8FA3A0; --green:#2FE38F; --blue:#3FA9F5;
+  --r:18px; --ease:cubic-bezier(.22,.61,.36,1);
+  --font:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+}
 *{box-sizing:border-box}
-html{overflow-x:clip}
-body{margin:0;min-height:100dvh;background:var(--bg);color:var(--ink);
-  font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;line-height:1.6;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  text-align:center;padding:40px 22px;-webkit-tap-highlight-color:transparent}
-.mark{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;
-  font-weight:800;font-size:26px;color:#04120F;margin-bottom:22px;
+html{overflow-x:clip;scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);
+  line-height:1.62;-webkit-tap-highlight-color:transparent;
+  -webkit-font-smoothing:antialiased}
+a{color:inherit}
+.skip{position:absolute;left:-9999px;top:0;background:var(--ink);color:#06090B;
+  padding:10px 16px;border-radius:0 0 12px 0;z-index:99;font-weight:700}
+.skip:focus{left:0}
+:focus-visible{outline:2px solid var(--green);outline-offset:3px;border-radius:6px}
+.wrap{width:min(760px,100% - 40px);margin-inline:auto}
+
+/* ---- top bar ---- */
+header.bar{position:sticky;top:0;z-index:40;backdrop-filter:blur(14px);
+  background:rgba(6,9,11,.72);border-bottom:1px solid var(--line)}
+.bar .wrap{display:flex;align-items:center;gap:12px;min-height:58px}
+.mark{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
+  font-weight:800;font-size:15px;color:#06090B;flex:none;
   background:linear-gradient(135deg,var(--green),var(--blue))}
-h1{font-size:clamp(28px,7vw,40px);margin:0 0 10px;letter-spacing:-.02em}
-p.sub{color:var(--dim);margin:0 0 30px;font-size:16px}
-a.dl{display:inline-flex;align-items:center;gap:10px;padding:18px 34px;min-height:56px;
-  border-radius:99px;text-decoration:none;font-weight:800;font-size:18px;color:#04120F;
-  background:linear-gradient(135deg,var(--green),var(--blue))}
+.brand{font-weight:800;letter-spacing:.06em;font-size:14px;text-decoration:none}
+.bar nav{margin-left:auto;display:flex;gap:6px}
+.bar nav a{font-size:13.5px;color:var(--dim);text-decoration:none;padding:9px 11px;
+  border-radius:10px;min-height:44px;display:inline-flex;align-items:center}
+.bar nav a:hover{color:var(--ink);background:var(--panel)}
+
+/* ---- hero ---- */
+main{padding:clamp(34px,7vw,66px) 0 90px}
+.eyebrow{font-size:12.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);
+  margin:0 0 12px}
+h1{font-size:clamp(30px,7.4vw,52px);line-height:1.08;letter-spacing:-.03em;margin:0 0 14px}
+h1 em{font-style:normal;background:linear-gradient(120deg,var(--green),var(--blue));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{color:var(--dim);font-size:clamp(15px,2.4vw,17px);margin:0 0 26px;max-width:56ch}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 28px;padding:0;list-style:none}
+.chips li{font-size:12.5px;color:var(--dim);border:1px solid var(--line);
+  padding:6px 12px;border-radius:99px;background:var(--panel)}
+.chips b{color:var(--ink);font-weight:700}
+.cta{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+a.dl{display:inline-flex;align-items:center;justify-content:center;gap:11px;
+  padding:17px 30px;min-height:56px;border-radius:99px;text-decoration:none;
+  font-weight:800;font-size:17px;color:#06090B;
+  background:linear-gradient(135deg,var(--green),var(--blue));
+  transition:transform .18s var(--ease)}
+a.dl:hover{transform:translateY(-2px)}
 a.dl:active{transform:translateY(1px)}
-.meta{color:var(--dim);font-size:13.5px;margin:16px 0 0}
-.steps{margin:38px 0 0;max-width:420px;text-align:left;color:var(--dim);font-size:14.5px;
-  border-top:1px solid var(--line);padding-top:20px}
-.steps b{color:var(--ink)}
-.steps li{margin:8px 0}
-.back{margin-top:34px;color:var(--dim);font-size:14px;text-decoration:none}
-.back:hover{color:var(--ink)}
+a.ghost{display:inline-flex;align-items:center;min-height:52px;padding:14px 22px;
+  border:1px solid var(--line);border-radius:99px;text-decoration:none;
+  font-size:14.5px;color:var(--dim);background:var(--panel)}
+a.ghost:hover{color:var(--ink)}
+
+/* ---- section ---- */
+section{margin-top:clamp(48px,9vw,86px);content-visibility:auto;
+  contain-intrinsic-size:auto 600px}
+h2{font-size:clamp(21px,4.2vw,28px);letter-spacing:-.02em;margin:0 0 6px}
+.sub{color:var(--dim);font-size:14.5px;margin:0 0 26px}
+
+/* ---- install rail (signature element) ---- */
+.railhead{display:flex;align-items:baseline;gap:10px;margin-bottom:18px}
+.railhead .count{font-variant-numeric:tabular-nums;font-weight:800;font-size:14px}
+.track{height:5px;border-radius:99px;background:rgba(255,255,255,.09);overflow:hidden;
+  margin-bottom:30px}
+.fill{height:100%;width:0%;border-radius:99px;
+  background:linear-gradient(90deg,var(--green),var(--blue));
+  transition:width .45s var(--ease)}
+ol.rail{list-style:none;margin:0;padding:0 0 0 40px;position:relative}
+ol.rail::before{content:"";position:absolute;left:15px;top:8px;bottom:8px;width:2px;
+  background:var(--line)}
+.gate{position:relative;padding:0 0 26px}
+.gate .num{position:absolute;left:-40px;top:0;width:32px;height:32px;border-radius:50%;
+  display:grid;place-items:center;font-size:13.5px;font-weight:800;color:var(--dim);
+  background:var(--bg);border:2px solid var(--line);transition:all .3s var(--ease)}
+.gate.done .num{color:#06090B;border-color:transparent;
+  background:linear-gradient(135deg,var(--green),var(--blue))}
+.card{border:1px solid var(--line);background:var(--panel);border-radius:var(--r);
+  padding:18px 20px}
+.gate.done .card{opacity:.62}
+.gate h3{margin:0 0 6px;font-size:16.5px;letter-spacing:-.01em}
+.gate p{margin:0;color:var(--dim);font-size:14.5px}
+.gate p + p{margin-top:9px}
+.gate b{color:var(--ink);font-weight:700}
+.path{display:inline-block;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:13px;color:var(--ink);background:rgba(255,255,255,.07);
+  padding:2px 7px;border-radius:6px}
+.tick{margin-top:14px;display:inline-flex;align-items:center;gap:8px;min-height:44px;
+  padding:9px 16px;border-radius:99px;cursor:pointer;font:inherit;font-size:13.5px;
+  font-weight:700;color:var(--dim);background:transparent;border:1px solid var(--line)}
+.tick:hover{color:var(--ink)}
+.gate.done .tick{color:var(--green);border-color:rgba(47,227,143,.4)}
+.tick svg{width:15px;height:15px;flex:none}
+
+/* ---- verify ---- */
+.hashbox{border:1px solid var(--line);background:var(--panel);border-radius:var(--r);
+  padding:18px 20px}
+.hash{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;
+  word-break:break-all;color:var(--ink);margin:0 0 14px;line-height:1.75}
+button.copy{min-height:44px;padding:10px 18px;border-radius:99px;cursor:pointer;
+  font:inherit;font-size:13.5px;font-weight:700;color:var(--ink);
+  background:transparent;border:1px solid var(--line)}
+button.copy:hover{background:rgba(255,255,255,.06)}
+pre{margin:16px 0 0;padding:14px 16px;border-radius:12px;overflow-x:auto;
+  background:rgba(0,0,0,.35);border:1px solid var(--line);
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:var(--dim)}
+dl.spec{margin:0;display:grid;grid-template-columns:minmax(0,150px) minmax(0,1fr);
+  gap:0;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+dl.spec dt,dl.spec dd{margin:0;padding:12px 18px;font-size:14px;
+  border-bottom:1px solid var(--line)}
+dl.spec dt{color:var(--dim)}
+dl.spec dd{font-weight:600;word-break:break-word}
+dl.spec dt:nth-last-of-type(1),dl.spec dd:nth-last-of-type(1){border-bottom:0}
+
+footer{border-top:1px solid var(--line);margin-top:80px;padding:30px 0 46px;
+  color:var(--dim);font-size:13.5px}
+footer a{color:var(--dim)}
+footer .links{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:16px}
+footer .links a{min-height:44px;display:inline-flex;align-items:center;text-decoration:none}
+footer .links a:hover{color:var(--ink)}
+
+/* ---- reveal ---- */
+.rv{opacity:0;transform:translate3d(0,16px,0);
+  transition:opacity .6s var(--ease),transform .6s var(--ease)}
+.rv.in{opacity:1;transform:translate3d(0,0,0)}
+@media (prefers-reduced-motion:reduce){
+  .rv{opacity:1;transform:none;transition:none}
+  html{scroll-behavior:auto}
+  a.dl:hover{transform:none}
+  .fill{transition:none}
+}
+html.perf .rv{opacity:1;transform:none;transition:none}
+html.perf .fill{transition:none}
+
+/* ---- minimal glass theme parity ---- */
 html.minimal body{background:#0B0C0B}
+html.minimal{--panel:rgba(255,255,255,.055);--line:rgba(255,255,255,.13);
+  --green:#9CC0B2;--blue:#6F9384;--dim:#93A79F}
 html.minimal .mark{background:linear-gradient(135deg,#9CC0B2,#6F9384);color:#0B0C0B}
+html.minimal h1 em{background:linear-gradient(120deg,#ECEFEE,#9CC0B2);
+  -webkit-background-clip:text;background-clip:text}
 html.minimal a.dl{background:#ECEFEE;color:#0B0C0B}
+html.minimal .gate.done .num{background:#9CC0B2;color:#0B0C0B}
+html.minimal .fill{background:linear-gradient(90deg,#9CC0B2,#6F9384)}
+html.minimal header.bar{background:rgba(11,12,11,.72)}
+html.minimal .gate.done .tick{color:#9CC0B2;border-color:rgba(156,192,178,.45)}
+
+@media (max-width:560px){
+  .bar nav a:not(.home){display:none}
+  ol.rail{padding-left:34px}
+  .gate .num{left:-34px;width:28px;height:28px;font-size:12.5px}
+  dl.spec{grid-template-columns:minmax(0,1fr);}
+  dl.spec dt{padding-bottom:0;border-bottom:0}
+}
 </style>
 </head>
 <body>
+<a class="skip" href="#main">Skip to main content</a>
 
-<div class="mark" aria-hidden="true">M</div>
-<h1>Download Maatram</h1>
-<p class="sub">Android app</p>
+<header class="bar">
+  <div class="wrap">
+    <span class="mark" aria-hidden="true">M</span>
+    <a class="brand" href="index.html">MAATRAM</a>
+    <nav aria-label="Site">
+      <a class="home" href="index.html">Home</a>
+      <a href="timers.html">Timers</a>
+      <a href="app-gate.html">App Gate</a>
+      <a href="study-room.html">Study Room</a>
+      <a href="stats.html">Stats</a>
+      <a href="leaderboard.html">Leaderboard</a>
+      <a href="socials.html">Socials</a>
+    </nav>
+  </div>
+</header>
 
-<a class="dl" href="/downloads/maatram.apk" download>
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-       stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-    <path d="M12 3v11"/><path d="m7 10 5 5 5-5"/><path d="M4 20h16"/>
-  </svg>
-  Download APK
-</a>
-<p class="meta">3.6 MB &middot; Android 5.1+</p>
+<main id="main">
+<div class="wrap">
 
-<ol class="steps">
-  <li>Tap download. If Chrome asks, choose <b>Download anyway</b>.</li>
-  <li>Open the file from <b>Files</b> or the download notification.</li>
-  <li>Allow <b>install from this source</b> when Android asks.</li>
-  <li>If it warns, tap <b>More details</b> &rarr; <b>Install anyway</b>.</li>
-</ol>
+  <p class="eyebrow">Android · free &amp; open source</p>
+  <h1>Get Maatram on <em>your phone</em></h1>
+  <p class="lede">The app runs the App Gate, Hard Lock and Maatram Shield natively, so
+    blocking keeps working after you leave the browser. Install it straight from here —
+    it is not on the Play Store.</p>
 
-<a class="back" href="/index.html">&larr; Back to Maatram</a>
+  <ul class="chips">
+    <li>Version <b>1.0</b></li>
+    <li id="sizeChip"><b>2.86 MB</b></li>
+    <li>Android <b>5.1</b> and above</li>
+    <li><b>com.maatram.app</b></li>
+  </ul>
 
+  <div class="cta">
+    <a class="dl" id="dlBtn" href="downloads/maatram-v1.0.apk" download
+       type="application/vnd.android.package-archive">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+           stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 3v11"/><path d="m7 10 5 5 5-5"/><path d="M4 20h16"/>
+      </svg>
+      Download APK
+    </a>
+    <a class="ghost" href="#verify">Check the file is genuine</a>
+  </div>
+
+  <section id="install" class="rv">
+    <h2>The install path</h2>
+    <p class="sub">Android asks five questions before a sideloaded app can run. Tick each
+      one off — your place is saved if you leave this page to install.</p>
+
+    <div class="railhead">
+      <span class="count" id="railCount">0 of 5</span>
+      <span class="sub" style="margin:0">done</span>
+    </div>
+    <div class="track" role="progressbar" aria-label="Install progress"
+         aria-valuemin="0" aria-valuemax="5" aria-valuenow="0" id="railBar">
+      <div class="fill" id="railFill"></div>
+    </div>
+
+    <ol class="rail" id="rail">
+      <li class="gate" data-step="1">
+        <span class="num" aria-hidden="true">1</span>
+        <div class="card">
+          <h3>Let the download finish</h3>
+          <p>Chrome warns that APK files can harm your device. Choose
+            <b>Download anyway</b>. That warning appears for every file Android did not
+            get from the Play Store.</p>
+          <button class="tick" type="button">Mark done</button>
+        </div>
+      </li>
+      <li class="gate" data-step="2">
+        <span class="num" aria-hidden="true">2</span>
+        <div class="card">
+          <h3>Open the file</h3>
+          <p>Tap it in the download notification, or find
+            <span class="path">maatram-v1.0.apk</span> in the <b>Files</b> app under
+            Downloads. Opening it from a chat preview often fails — use Files.</p>
+          <button class="tick" type="button">Mark done</button>
+        </div>
+      </li>
+      <li class="gate" data-step="3">
+        <span class="num" aria-hidden="true">3</span>
+        <div class="card">
+          <h3>Allow installs from this source</h3>
+          <p>Android sends you to a settings screen the first time. Turn on
+            <b>Allow from this source</b> for the app you opened the file with, then press
+            back.</p>
+          <p>Already have an older Maatram build on the phone? Uninstall it first —
+            two builds signed with different keys cannot replace each other, and the
+            install fails with <b>App not installed</b>.</p>
+          <button class="tick" type="button">Mark done</button>
+        </div>
+      </li>
+      <li class="gate" data-step="4">
+        <span class="num" aria-hidden="true">4</span>
+        <div class="card">
+          <h3>Get past Play Protect</h3>
+          <p>Play Protect scans anything it has not seen before. If it appears, tap
+            <b>More details</b>, then <b>Install anyway</b>.</p>
+          <button class="tick" type="button">Mark done</button>
+        </div>
+      </li>
+      <li class="gate" data-step="5">
+        <span class="num" aria-hidden="true">5</span>
+        <div class="card">
+          <h3>Switch on Maatram Shield</h3>
+          <p>Shield is the accessibility service that actually blocks apps during a Hard
+            Lock. Open <span class="path">Settings → Accessibility → Maatram Shield</span>
+            and turn it on. Without this, the timers still run but nothing gets blocked.</p>
+          <p>On Android 13 and above the switch may be greyed out with a
+            <b>Restricted setting</b> message. Go to
+            <span class="path">Settings → Apps → Maatram → ⋮ → Allow restricted settings</span>,
+            then come back and enable Shield.</p>
+          <p>On Samsung, keep the service alive: lock Maatram in Recents, set Battery to
+            <b>Unrestricted</b>, and remove it from <b>Sleeping apps</b>.</p>
+          <button class="tick" type="button">Mark done</button>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section id="verify" class="rv">
+    <h2>Check the file is genuine</h2>
+    <p class="sub">This is the SHA-256 of the exact file served from this site. If your
+      copy hashes to something else, it is not the file we published — delete it.</p>
+    <div class="hashbox">
+      <p class="hash" id="hash">1bd438d9c296af15f5e47e3240cf988af149a4c2592b71502fb599e0a318ed98</p>
+      <button class="copy" id="copyBtn" type="button">Copy hash</button>
+      <pre>Windows   certutil -hashfile maatram-v1.0.apk SHA256
+macOS     shasum -a 256 maatram-v1.0.apk
+Linux     sha256sum maatram-v1.0.apk</pre>
+    </div>
+  </section>
+
+  <section id="details" class="rv">
+    <h2>What the build contains</h2>
+    <p class="sub">Read straight out of the APK manifest.</p>
+    <dl class="spec">
+      <dt>Package</dt><dd>com.maatram.app</dd>
+      <dt>Version</dt><dd>1.0 (version code 1)</dd>
+      <dt>Size</dt><dd id="sizeSpec">2 995 466 bytes · 2.86 MB</dd>
+      <dt>Requires</dt><dd>Android 5.1 (API 22) or newer · built against API 34</dd>
+      <dt>Permissions</dt><dd>Internet · network state · vibrate · wake lock</dd>
+      <dt>Service</dt><dd>AppBlockerService — the accessibility service behind Hard Lock,
+        the friction gate and usage reminders</dd>
+      <dt>Signing</dt><dd>Release key, schemes v1 + v2 · certificate valid to 2051</dd>
+      <dt>Source</dt><dd><a href="https://github.com/MaatramReelsBlocking/Maatram-"
+        rel="noopener">github.com/MaatramReelsBlocking/Maatram-</a></dd>
+    </dl>
+  </section>
+
+  <section id="trouble" class="rv">
+    <h2>If it will not install</h2>
+    <p class="sub">Three failures cover almost everything.</p>
+    <dl class="spec">
+      <dt>App not installed</dt><dd>An older Maatram is still on the phone. Uninstall it,
+        then install again.</dd>
+      <dt>Blocked by Play Protect</dt><dd>Tap More details, then Install anyway. It is a
+        warning about the source, not about the file.</dd>
+      <dt>Hard Lock does nothing</dt><dd>Maatram Shield is off, or the system killed it.
+        Re-enable it in Accessibility and follow the Samsung steps in gate 5.</dd>
+    </dl>
+  </section>
+
+</div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="links">
+      <a href="index.html">Home</a>
+      <a href="timers.html">Timers</a>
+      <a href="app-gate.html">App Gate</a>
+      <a href="study-room.html">Study Room</a>
+      <a href="stats.html">Stats</a>
+      <a href="leaderboard.html">Leaderboard</a>
+      <a href="socials.html">Socials</a>
+    </div>
+    <p>© 2026 Maatram · Action ⇒ Value · Free &amp; open source. Built by students, in
+      Coimbatore, India.</p>
+  </div>
+</footer>
+
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"SoftwareApplication",
+  "name":"Maatram",
+  "operatingSystem":"Android 5.1+",
+  "applicationCategory":"UtilitiesApplication",
+  "softwareVersion":"1.0",
+  "fileSize":"2995466",
+  "downloadUrl":"https://maatram-website.vercel.app/downloads/maatram-v1.0.apk",
+  "installUrl":"https://maatram-website.vercel.app/download.html",
+  "url":"https://maatram-website.vercel.app/download.html",
+  "isAccessibleForFree":true,
+  "offers":{"@type":"Offer","price":"0","priceCurrency":"INR"},
+  "publisher":{"@type":"Organization","name":"Maatram",
+    "url":"https://maatram-website.vercel.app/"}
+}
+</script>
+
+<script>
+(function(){
+  'use strict';
+  var PERF = !!window.MAATRAM_PERF;
+  var RM = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var STATIC = PERF || RM;
+
+  /* ---- install rail state ---- */
+  var KEY = 'maatram_install_steps';
+  var rail = document.getElementById('rail');
+  var fill = document.getElementById('railFill');
+  var bar  = document.getElementById('railBar');
+  var cnt  = document.getElementById('railCount');
+  var gates = rail ? [].slice.call(rail.querySelectorAll('.gate')) : [];
+  var done = {};
+
+  try { done = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { done = {}; }
+
+  function paint(){
+    var n = 0;
+    gates.forEach(function(g){
+      var on = !!done[g.dataset.step];
+      if (on) n++;
+      g.classList.toggle('done', on);
+      var b = g.querySelector('.tick');
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      b.innerHTML = on
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 12 6 6L20 6"/></svg>Done'
+        : 'Mark done';
+    });
+    if (fill) fill.style.width = (n / gates.length * 100) + '%';
+    if (cnt) cnt.textContent = n + ' of ' + gates.length;
+    if (bar) bar.setAttribute('aria-valuenow', String(n));
+  }
+
+  gates.forEach(function(g){
+    g.querySelector('.tick').addEventListener('click', function(){
+      var s = g.dataset.step;
+      if (done[s]) { delete done[s]; } else { done[s] = 1; }
+      try { localStorage.setItem(KEY, JSON.stringify(done)); } catch (e) {}
+      paint();
+    });
+  });
+  paint();
+
+  /* ---- copy hash ---- */
+  var copyBtn = document.getElementById('copyBtn');
+  var hashEl = document.getElementById('hash');
+  if (copyBtn && hashEl) {
+    copyBtn.addEventListener('click', function(){
+      var txt = hashEl.textContent.trim();
+      var ok = function(){ copyBtn.textContent = 'Copied'; setTimeout(function(){
+        copyBtn.textContent = 'Copy hash'; }, 1600); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(txt).then(ok, fallback);
+      } else { fallback(); }
+      function fallback(){
+        var t = document.createElement('textarea');
+        t.value = txt; t.setAttribute('readonly','');
+        t.style.cssText = 'position:fixed;left:-9999px';
+        document.body.appendChild(t); t.select();
+        try { document.execCommand('copy'); ok(); } catch (e) {}
+        document.body.removeChild(t);
+      }
+    });
+  }
+
+  /* ---- live size check (never blocks the page) ---- */
+  var dl = document.getElementById('dlBtn');
+  if (dl && window.fetch) {
+    fetch(dl.getAttribute('href'), { method: 'HEAD' }).then(function(r){
+      var len = parseInt(r.headers.get('content-length') || '0', 10);
+      if (!len) return;
+      var mb = (len / 1048576).toFixed(2);
+      var chip = document.getElementById('sizeChip');
+      var spec = document.getElementById('sizeSpec');
+      if (chip) chip.innerHTML = '<b>' + mb + ' MB</b>';
+      if (spec) spec.textContent = len.toLocaleString('en-US').replace(/,/g, ' ')
+        + ' bytes · ' + mb + ' MB';
+    }).catch(function(){});
+  }
+
+  /* ---- reveals ---- */
+  var rv = [].slice.call(document.querySelectorAll('.rv'));
+  if (STATIC || !('IntersectionObserver' in window)) {
+    rv.forEach(function(el){ el.classList.add('in'); });
+  } else {
+    var io = new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+      });
+    }, { rootMargin: '0px 0px -12% 0px', threshold: .08 });
+    rv.forEach(function(el){ io.observe(el); });
+  }
+})();
+</script>
 </body>
 </html>
