@@ -1,0 +1,32 @@
+Two things go into the repo root. That's all.
+
+  download.html          ->  repo root  (next to index.html)
+  downloads/maatram.apk  ->  repo root  (creates a downloads/ folder)
+
+Then:
+
+  git add -A
+  git commit -m "add app download page"
+  git push
+
+Live at:  https://maatram-website.vercel.app/download.html
+Direct:   https://maatram-website.vercel.app/downloads/maatram.apk
+
+Link to it from your nav / socials page with:
+
+  <a href="/download.html">Download the app</a>
+
+
+OPTIONAL - only if downloads feel wrong on some phone.
+Open vercel.json, and inside the existing "headers" array add this object:
+
+    {
+      "source": "/downloads/(.*)\\.apk",
+      "headers": [
+        { "key": "Content-Type", "value": "application/vnd.android.package-archive" },
+        { "key": "Content-Disposition", "value": "attachment" }
+      ]
+    }
+
+It works without this. It just makes Android hand the file straight to the
+installer instead of guessing.
