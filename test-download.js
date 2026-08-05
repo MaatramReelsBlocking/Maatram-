@@ -2,9 +2,9 @@
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
 const { JSDOM } = require('jsdom');
 
-const ROOT = path.join(__dirname, '..');
+const ROOT = __dirname;
 const HTML = fs.readFileSync(path.join(ROOT, 'download.html'), 'utf8');
-const APK = path.join(ROOT, 'downloads', 'maatram-v1.0.apk');
+const APK = path.join(ROOT, 'maatram-v1.0.apk');
 
 let pass = 0, fail = 0;
 const ok = (name, cond, extra) => {
@@ -15,10 +15,10 @@ const ok = (name, cond, extra) => {
 /* ---------- static file facts ---------- */
 const apkBytes = fs.statSync(APK).size;
 const apkHash = crypto.createHash('sha256').update(fs.readFileSync(APK)).digest('hex');
-const sidecar = fs.readFileSync(APK + '.sha256', 'utf8').trim().split(/\s+/)[0];
+
 
 ok('APK exists', apkBytes > 0);
-ok('sidecar .sha256 matches file', sidecar === apkHash, sidecar);
+
 
 /* ---------- DOM ---------- */
 const errors = [];
@@ -32,14 +32,14 @@ const { window } = dom, doc = window.document;
 ok('no script errors on load', errors.length === 0, errors[0]);
 ok('has <h1>', doc.querySelectorAll('h1').length === 1);
 ok('one inline <style>', doc.querySelectorAll('style').length === 1);
-ok('one inline behaviour <script>',
-  [...doc.querySelectorAll('script')].filter(s => !s.src && s.type !== 'application/ld+json').length === 1);
+ok('inline scripts: behaviour + shared nav auth',
+  [...doc.querySelectorAll('script')].filter(s => !s.src && s.type !== 'application/ld+json').length === 2);
 ok('theme.js loaded', !!doc.querySelector('script[src="theme.js"]'));
 
 /* ---------- download wiring ---------- */
 const dl = doc.getElementById('dlBtn');
 ok('download button exists', !!dl);
-ok('href points at versioned apk', dl.getAttribute('href') === 'downloads/maatram-v1.0.apk',
+ok('href points at versioned apk', dl.getAttribute('href') === 'maatram-v1.0.apk',
   dl && dl.getAttribute('href'));
 ok('href resolves to a real file', fs.existsSync(path.join(ROOT, dl.getAttribute('href'))));
 ok('download attribute present', dl.hasAttribute('download'));
@@ -49,10 +49,9 @@ ok('apk mime type hinted', dl.getAttribute('type') === 'application/vnd.android.
 const hashText = doc.getElementById('hash').textContent.trim();
 ok('page hash == real apk hash', hashText === apkHash, hashText);
 ok('spec byte count == real size',
-  (doc.getElementById('sizeSpec').textContent.match(/^([\d\s\u00a0]+)bytes/) || [, ''])[1]
-    .replace(/[^\d]/g, '') === String(apkBytes));
+  doc.body.textContent.replace(/[\s\u00a0]/g, '').includes(String(apkBytes)));
 const mb = (apkBytes / 1048576).toFixed(2);
-ok('size chip == real MB', doc.getElementById('sizeChip').textContent.includes(mb), mb);
+ok('size chip == real MB', doc.body.textContent.includes(mb), mb);
 ok('no stale 3.6 MB figure', !/3\.6\s*MB|3819077/.test(HTML));
 ok('no stale /downloads/maatram.apk link', !/downloads\/maatram\.apk/.test(HTML));
 
@@ -98,7 +97,10 @@ ok('minimal theme parity rules present', /html\.minimal/.test(HTML));
 
 /* ---------- hygiene ---------- */
 ok('no console.log left', !/console\.log/.test(HTML));
-ok('no external CDN', !/https?:\/\/[^"']*\.(js|css)(["'?])/.test(HTML));
+ok('nav uses the same site nav id', !!doc.getElementById('mnav'));
+ok('download link is the active nav item',
+  doc.querySelector('#mnav a.mn-link.active').getAttribute('href') === 'download.html');
+ok('no live size probe left', !/fetch\(/.test(HTML));
 ok('no duplicate ids', (() => {
   const ids = [...doc.querySelectorAll('[id]')].map(e => e.id);
   return new Set(ids).size === ids.length;

@@ -43,18 +43,41 @@ a{color:inherit}
 :focus-visible{outline:2px solid var(--green);outline-offset:3px;border-radius:6px}
 .wrap{width:min(760px,100% - 40px);margin-inline:auto}
 
-/* ---- top bar ---- */
-header.bar{position:sticky;top:0;z-index:40;backdrop-filter:blur(14px);
-  background:rgba(6,9,11,.72);border-bottom:1px solid var(--line)}
-.bar .wrap{display:flex;align-items:center;gap:12px;min-height:58px}
-.mark{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
-  font-weight:800;font-size:15px;color:#06090B;flex:none;
-  background:linear-gradient(135deg,var(--green),var(--blue))}
-.brand{font-weight:800;letter-spacing:.06em;font-size:14px;text-decoration:none}
-.bar nav{margin-left:auto;display:flex;gap:6px}
-.bar nav a{font-size:13.5px;color:var(--dim);text-decoration:none;padding:9px 11px;
-  border-radius:10px;min-height:44px;display:inline-flex;align-items:center}
-.bar nav a:hover{color:var(--ink);background:var(--panel)}
+/* ---- site nav (identical to every other page) ---- */
+#mnav{position:fixed;top:0;left:0;right:0;height:52px;z-index:600;display:flex;align-items:center;gap:5px;
+  padding:0 14px;background:rgba(2,10,8,.82);backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(47,227,143,.15);font-family:'Sora','Inter',system-ui,sans-serif;cursor:auto}
+#mnav *{cursor:pointer}
+#mnav .mn-logo{display:flex;align-items:center;gap:8px;margin-right:10px;text-decoration:none;color:#eafff6}
+
+#mnav .mn-mark{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#2fe38f,#37b6ff);
+  display:grid;place-items:center;font-weight:800;color:#04120f;font-size:14px}
+#mnav .mn-logo b{font-size:13px;font-weight:700;letter-spacing:.4px}
+#mnav .mn-spacer{flex:1}
+#mnav a.mn-link{font-size:10.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:#7da99b;text-decoration:none;padding:7px 11px;border-radius:100px;transition:all .25s;white-space:nowrap}
+#mnav a.mn-link:hover{color:#eafff6;background:rgba(55,182,255,.1)}
+#mnav a.mn-link.active{color:#04120f;background:linear-gradient(90deg,#2fe38f,#37b6ff)}
+#mnavAuth{display:flex;align-items:center;gap:8px;margin-left:6px}
+#mnavIn{font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#04120f;
+  text-decoration:none;padding:8px 16px;border-radius:100px;background:linear-gradient(90deg,#2fe38f,#37b6ff);white-space:nowrap}
+#mnavChip{display:none;align-items:center;gap:8px;padding:4px 6px;border-radius:100px;
+  border:1px solid rgba(47,227,143,.3);background:rgba(47,227,143,.06);position:relative}
+#mnavChip img{width:28px;height:28px;border-radius:50%;border:1px solid #2fe38f}
+#mnavChip .nm{font-size:12px;font-weight:700;color:#eafff6;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#mnavChip .pt{font-size:10px;font-weight:800;color:#ffd166;letter-spacing:.5px;padding:3px 8px;border-radius:100px;
+  border:1px solid rgba(255,209,102,.35);background:rgba(255,209,102,.08);white-space:nowrap}
+#mnavMenu{display:none;position:absolute;top:44px;right:0;min-width:180px;z-index:700;
+  background:rgba(6,18,14,.97);border:1px solid rgba(47,227,143,.25);border-radius:14px;padding:8px;
+  box-shadow:0 18px 50px -12px rgba(0,0,0,.8)}
+#mnavMenu.open{display:block}
+#mnavMenu button,#mnavMenu a{display:block;width:100%;text-align:left;padding:10px 13px;border-radius:9px;
+  background:transparent;border:none;color:#eafff6;font-family:inherit;font-size:12px;font-weight:600;text-decoration:none;transition:background .2s}
+#mnavMenu button:hover,#mnavMenu a:hover{background:rgba(55,182,255,.12)}
+#mnavMenu .out{color:#ff5d73}
+@media(max-width:860px){#mnav{overflow-x:auto;scrollbar-width:none}#mnav::-webkit-scrollbar{display:none}
+  #mnav .mn-logo b{display:none}#mnavChip .nm{display:none}}
+body{padding-top:52px!important}
 
 /* ---- hero ---- */
 main{padding:clamp(34px,7vw,66px) 0 90px}
@@ -165,17 +188,14 @@ html.perf .fill{transition:none}
 html.minimal body{background:#0B0C0B}
 html.minimal{--panel:rgba(255,255,255,.055);--line:rgba(255,255,255,.13);
   --green:#9CC0B2;--blue:#6F9384;--dim:#93A79F}
-html.minimal .mark{background:linear-gradient(135deg,#9CC0B2,#6F9384);color:#0B0C0B}
 html.minimal h1 em{background:linear-gradient(120deg,#ECEFEE,#9CC0B2);
   -webkit-background-clip:text;background-clip:text}
 html.minimal a.dl{background:#ECEFEE;color:#0B0C0B}
 html.minimal .gate.done .num{background:#9CC0B2;color:#0B0C0B}
 html.minimal .fill{background:linear-gradient(90deg,#9CC0B2,#6F9384)}
-html.minimal header.bar{background:rgba(11,12,11,.72)}
 html.minimal .gate.done .tick{color:#9CC0B2;border-color:rgba(156,192,178,.45)}
 
 @media (max-width:560px){
-  .bar nav a:not(.home){display:none}
   ol.rail{padding-left:34px}
   .gate .num{left:-34px;width:28px;height:28px;font-size:12.5px}
   dl.spec{grid-template-columns:minmax(0,1fr);}
@@ -186,21 +206,99 @@ html.minimal .gate.done .tick{color:#9CC0B2;border-color:rgba(156,192,178,.45)}
 <body>
 <a class="skip" href="#main">Skip to main content</a>
 
-<header class="bar">
-  <div class="wrap">
-    <span class="mark" aria-hidden="true">M</span>
-    <a class="brand" href="index.html">MAATRAM</a>
-    <nav aria-label="Site">
-      <a class="home" href="index.html">Home</a>
-      <a href="timers.html">Timers</a>
-      <a href="app-gate.html">App Gate</a>
-      <a href="study-room.html">Study Room</a>
-      <a href="stats.html">Stats</a>
-      <a href="leaderboard.html">Leaderboard</a>
-      <a href="socials.html">Socials</a>
-    </nav>
+<nav id="mnav" aria-label="Main navigation">
+  <a class="mn-logo" href="index.html"><span class="mn-mark">M</span><b>MAATRAM</b></a>
+  <span class="mn-spacer"></span><a class="mn-link" href="index.html">Home</a><a class="mn-link" href="timers.html">Timers</a><a class="mn-link" href="app-gate.html">App Gate</a><a class="mn-link" href="study-room.html">Study Room</a><a class="mn-link" href="stats.html">Stats</a><a class="mn-link" href="leaderboard.html">Leaderboard</a><a class="mn-link" href="socials.html">Socials</a><a class="mn-link active" href="download.html">Get the app</a>
+  <div id="mnavAuth">
+    <a id="mnavIn" href="login.html">Sign in</a>
+    <div id="mnavChip">
+      <img id="mnavPic" referrerpolicy="no-referrer" alt="Maatram user profile photo" loading="lazy" decoding="async" width="28" height="28">
+      <span class="nm" id="mnavNm"></span>
+      <span class="pt" id="mnavPts">0 PTS</span>
+      <div id="mnavMenu">
+        <a href="leaderboard.html">🏆 My rank</a>
+        <button class="out" id="mnavOut">Sign out</button>
+      </div>
+    </div>
   </div>
-</header>
+</nav>
+<script>
+/* ══ universal nav auth (Firebase session shared across all pages) ══ */
+(async()=>{
+  const chip=document.getElementById('mnavChip'),inBtn=document.getElementById('mnavIn'),
+        menu=document.getElementById('mnavMenu');
+  if(!chip)return;
+  chip.addEventListener('click',e=>{ if(!e.target.closest('#mnavMenu')) menu.classList.toggle('open'); });
+  document.addEventListener('click',e=>{ if(!e.target.closest('#mnavChip')) menu.classList.remove('open'); });
+  if(!(location.protocol==='http:'||location.protocol==='https:'))return;  // file:// → nav stays simple
+  try{
+    const [{initializeApp,getApps,getApp},{getAuth,onAuthStateChanged,signOut},{getFirestore,doc,onSnapshot,runTransaction}]=await Promise.all([
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js')
+    ]);
+    const app=getApps().length?getApp():initializeApp({apiKey:"AIzaSyAjiAm61IkH3wB1tjwOyGRrXAuRMKQyCcQ",authDomain:"maatram-859f4.firebaseapp.com",projectId:"maatram-859f4",storageBucket:"maatram-859f4.firebasestorage.app",messagingSenderId:"770970784123",appId:"1:770970784123:web:7c73c74ddb2179b69dedde"});
+    const auth=getAuth(app),db=getFirestore(app);
+    let unsub=null;
+    /* ══ Maatram points engine (all pages) ══ */
+    let __mtUser=null;
+    window.maatramAward=async function(pts,reason){
+      pts=Math.round(pts); if(!pts) return;
+      /* local bank (works offline / signed-out) */
+      try{
+        const cur=+localStorage.getItem('maatram_points')||0;
+        localStorage.setItem('maatram_points',Math.max(0,cur+pts));
+      }catch(_){}
+      try{ new BroadcastChannel('maatram').postMessage({type:'points',pts}); }catch(_){}
+      try{ parent.postMessage({maatramRelay:{type:'points',pts}},'*'); }catch(_){}
+      mtToast(pts,reason);
+      /* cloud write (clamped to security rules: floor 0, max +200 / −100 per write) */
+      if(__mtUser){
+        const uid=__mtUser.uid;
+        try{
+          await runTransaction(db,async t=>{
+            const r=doc(db,'users',uid);
+            const s=await t.get(r);
+            const cur=(s.exists()&&s.data().points)||0;
+            let nx=cur+pts;
+            nx=Math.max(0,Math.max(cur-100,Math.min(cur+200,nx)));
+            t.set(r,{points:nx},{merge:true});
+          });
+        }catch(e){ console.warn('points write',e); }
+      }
+    };
+    function mtToast(pts,reason){
+      const t=document.createElement('div');
+      t.textContent=(pts>0?'+':'')+pts+' PTS'+(reason?' · '+reason:'');
+      t.style.cssText='position:fixed;top:64px;right:16px;z-index:900;font-family:Sora,Inter,sans-serif;'
+        +'font-weight:800;font-size:13px;letter-spacing:1px;padding:11px 20px;border-radius:100px;'
+        +'backdrop-filter:blur(10px);transition:all .5s cubic-bezier(.2,1.3,.3,1);opacity:0;transform:translateY(-14px);'
+        +(pts>0?'color:#04120f;background:linear-gradient(90deg,#2fe38f,#37b6ff);box-shadow:0 8px 30px -8px rgba(47,227,143,.7);'
+               :'color:#fff;background:linear-gradient(90deg,#ff5d73,#ff9a5d);box-shadow:0 8px 30px -8px rgba(255,93,115,.7);');
+      document.body.appendChild(t);
+      requestAnimationFrame(()=>{t.style.opacity='1';t.style.transform='none';});
+      setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(-14px)';},2600);
+      setTimeout(()=>t.remove(),3200);
+    }
+
+    onAuthStateChanged(auth,u=>{
+      __mtUser=u;
+      if(unsub){unsub();unsub=null;}
+      if(u){
+        inBtn.style.display='none';chip.style.display='flex';
+        document.getElementById('mnavPic').src=u.photoURL||'';
+        document.getElementById('mnavNm').textContent=(u.displayName||'You').split(' ')[0];
+        unsub=onSnapshot(doc(db,'users',u.uid),s=>{
+          document.getElementById('mnavPts').textContent=((s.exists()&&s.data().points)||0)+' PTS';
+        },()=>{});
+      }else{
+        inBtn.style.display='inline-block';chip.style.display='none';
+      }
+    });
+    document.getElementById('mnavOut').onclick=()=>{menu.classList.remove('open');signOut(auth);};
+  }catch(e){console.warn('nav auth',e);}
+})();
+</script>
 
 <main id="main">
 <div class="wrap">
@@ -213,13 +311,13 @@ html.minimal .gate.done .tick{color:#9CC0B2;border-color:rgba(156,192,178,.45)}
 
   <ul class="chips">
     <li>Version <b>1.0</b></li>
-    <li id="sizeChip"><b>2.86 MB</b></li>
+    <li><b>2.86 MB</b></li>
     <li>Android <b>5.1</b> and above</li>
     <li><b>com.maatram.app</b></li>
   </ul>
 
   <div class="cta">
-    <a class="dl" id="dlBtn" href="downloads/maatram-v1.0.apk" download
+    <a class="dl" id="dlBtn" href="maatram-v1.0.apk" download
        type="application/vnd.android.package-archive">
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -325,7 +423,7 @@ Linux     sha256sum maatram-v1.0.apk</pre>
     <dl class="spec">
       <dt>Package</dt><dd>com.maatram.app</dd>
       <dt>Version</dt><dd>1.0 (version code 1)</dd>
-      <dt>Size</dt><dd id="sizeSpec">2 995 466 bytes · 2.86 MB</dd>
+      <dt>Size</dt><dd>2 995 466 bytes · 2.86 MB</dd>
       <dt>Requires</dt><dd>Android 5.1 (API 22) or newer · built against API 34</dd>
       <dt>Permissions</dt><dd>Internet · network state · vibrate · wake lock</dd>
       <dt>Service</dt><dd>AppBlockerService — the accessibility service behind Hard Lock,
@@ -377,7 +475,7 @@ Linux     sha256sum maatram-v1.0.apk</pre>
   "applicationCategory":"UtilitiesApplication",
   "softwareVersion":"1.0",
   "fileSize":"2995466",
-  "downloadUrl":"https://maatram-website.vercel.app/downloads/maatram-v1.0.apk",
+  "downloadUrl":"https://maatram-website.vercel.app/maatram-v1.0.apk",
   "installUrl":"https://maatram-website.vercel.app/download.html",
   "url":"https://maatram-website.vercel.app/download.html",
   "isAccessibleForFree":true,
@@ -452,21 +550,6 @@ Linux     sha256sum maatram-v1.0.apk</pre>
         document.body.removeChild(t);
       }
     });
-  }
-
-  /* ---- live size check (never blocks the page) ---- */
-  var dl = document.getElementById('dlBtn');
-  if (dl && window.fetch) {
-    fetch(dl.getAttribute('href'), { method: 'HEAD' }).then(function(r){
-      var len = parseInt(r.headers.get('content-length') || '0', 10);
-      if (!len) return;
-      var mb = (len / 1048576).toFixed(2);
-      var chip = document.getElementById('sizeChip');
-      var spec = document.getElementById('sizeSpec');
-      if (chip) chip.innerHTML = '<b>' + mb + ' MB</b>';
-      if (spec) spec.textContent = len.toLocaleString('en-US').replace(/,/g, ' ')
-        + ' bytes · ' + mb + ' MB';
-    }).catch(function(){});
   }
 
   /* ---- reveals ---- */
