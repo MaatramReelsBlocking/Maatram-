@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Your Maatram account | Maatram</title>
+<meta name="description" content="Sign in to Maatram with Google and pick your profile - student, teacher or parent - to reach your workspace.">
+<link rel="canonical" href="https://maatram-website.vercel.app/roles.html">
+<meta name="robots" content="noindex, follow">
+<meta name="theme-color" content="#06090B">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="favicon.ico">
+<link rel="manifest" href="site.webmanifest">
+<script src="theme.js"></script>
+<style>
+:root{
+  --bg:#06090B; --panel:rgba(255,255,255,.045); --line:rgba(255,255,255,.13);
+  --ink:#ECEFEE; --dim:#8FA3A0; --green:#2FE38F; --blue:#3FA9F5;
+  --r:18px; --ease:cubic-bezier(.22,.61,.36,1);
+  --font:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{overflow-x:clip;scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);
+  line-height:1.62;-webkit-tap-highlight-color:transparent;
+  -webkit-font-smoothing:antialiased}
+a{color:inherit}
+.skip{position:absolute;left:-9999px;top:0;background:var(--ink);color:#06090B;
+  padding:10px 16px;border-radius:0 0 12px 0;z-index:99;font-weight:700}
+.skip:focus{left:0}
+:focus-visible{outline:2px solid var(--green);outline-offset:3px;border-radius:6px}
+.wrap{width:min(760px,100% - 40px);margin-inline:auto}
+
+/* ---- site nav (identical to every other page) ---- */
+#mnav{position:fixed;top:0;left:0;right:0;height:52px;z-index:600;display:flex;align-items:center;gap:5px;
+  padding:0 14px;background:rgba(2,10,8,.82);backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(47,227,143,.15);font-family:'Sora','Inter',system-ui,sans-serif;cursor:auto}
+#mnav *{cursor:pointer}
+#mnav .mn-logo{display:flex;align-items:center;gap:8px;margin-right:10px;text-decoration:none;color:#eafff6}
+
+#mnav .mn-mark{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#2fe38f,#37b6ff);
+  display:grid;place-items:center;font-weight:800;color:#04120f;font-size:14px}
+#mnav .mn-logo b{font-size:13px;font-weight:700;letter-spacing:.4px}
+#mnav .mn-spacer{flex:1}
+#mnav a.mn-link{font-size:10.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:#7da99b;text-decoration:none;padding:7px 11px;border-radius:100px;transition:all .25s;white-space:nowrap}
+#mnav a.mn-link:hover{color:#eafff6;background:rgba(55,182,255,.1)}
+#mnav a.mn-link.active{color:#04120f;background:linear-gradient(90deg,#2fe38f,#37b6ff)}
+#mnavAuth{display:flex;align-items:center;gap:8px;margin-left:6px}
+#mnavIn{font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#04120f;
+  text-decoration:none;padding:8px 16px;border-radius:100px;background:linear-gradient(90deg,#2fe38f,#37b6ff);white-space:nowrap}
+#mnavChip{display:none;align-items:center;gap:8px;padding:4px 6px;border-radius:100px;
+  border:1px solid rgba(47,227,143,.3);background:rgba(47,227,143,.06);position:relative}
+#mnavChip img{width:28px;height:28px;border-radius:50%;border:1px solid #2fe38f}
+#mnavChip .nm{font-size:12px;font-weight:700;color:#eafff6;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#mnavChip .pt{font-size:10px;font-weight:800;color:#ffd166;letter-spacing:.5px;padding:3px 8px;border-radius:100px;
+  border:1px solid rgba(255,209,102,.35);background:rgba(255,209,102,.08);white-space:nowrap}
+#mnavMenu{display:none;position:absolute;top:44px;right:0;min-width:180px;z-index:700;
+  background:rgba(6,18,14,.97);border:1px solid rgba(47,227,143,.25);border-radius:14px;padding:8px;
+  box-shadow:0 18px 50px -12px rgba(0,0,0,.8)}
+#mnavMenu.open{display:block}
+#mnavMenu button,#mnavMenu a{display:block;width:100%;text-align:left;padding:10px 13px;border-radius:9px;
+  background:transparent;border:none;color:#eafff6;font-family:inherit;font-size:12px;font-weight:600;text-decoration:none;transition:background .2s}
+#mnavMenu button:hover,#mnavMenu a:hover{background:rgba(55,182,255,.12)}
+#mnavMenu .out{color:#ff5d73}
+@media(max-width:860px){#mnav{overflow-x:auto;scrollbar-width:none}#mnav::-webkit-scrollbar{display:none}
+  #mnav .mn-logo b{display:none}#mnavChip .nm{display:none}}
+body{padding-top:52px!important}
+
+/* ---- roles page ---- */
+main{padding:clamp(34px,7vw,66px) 0 90px}
+.eyebrow{font-size:12.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin:0 0 12px}
+h1{font-size:clamp(28px,6.4vw,46px);line-height:1.1;letter-spacing:-.03em;margin:0 0 14px}
+h1 em{font-style:normal;background:linear-gradient(120deg,var(--green),var(--blue));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{color:var(--dim);font-size:clamp(15px,2.4vw,17px);margin:0 0 26px;max-width:56ch}
+h2{font-size:clamp(19px,3.8vw,26px);letter-spacing:-.02em;margin:0 0 6px}
+.sub{color:var(--dim);font-size:14.5px;margin:0 0 22px}
+section{margin-top:clamp(34px,7vw,60px)}
+[hidden]{display:none!important}
+
+.card{border:1px solid var(--line);background:var(--panel);border-radius:var(--r);padding:20px 22px;margin:0 0 14px}
+.card h3{margin:0 0 6px;font-size:16px;letter-spacing:-.01em}
+.card p{margin:0;color:var(--dim);font-size:14px}
+
+button.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  min-height:52px;padding:15px 26px;border:0;border-radius:99px;cursor:pointer;
+  font-family:inherit;font-weight:800;font-size:15.5px;color:#06090B;
+  background:linear-gradient(135deg,var(--green),var(--blue));
+  transition:transform .18s var(--ease)}
+button.btn:hover{transform:translateY(-2px)}
+button.btn:disabled{opacity:.5;transform:none;cursor:default}
+button.ghost{background:none;color:var(--dim);border:1px solid var(--line);font-weight:700;font-size:14px;
+  min-height:44px;padding:11px 20px}
+button.ghost:hover{color:var(--ink);transform:none}
+
+.pickgrid{display:grid;gap:14px;grid-template-columns:1fr}
+@media(min-width:720px){.pickgrid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.persona{text-align:left;width:100%;cursor:pointer;font-family:inherit;color:var(--ink);
+  border:1px solid var(--line);background:var(--panel);border-radius:var(--r);padding:20px}
+.persona:hover,.persona[aria-pressed="true"]{border-color:var(--green)}
+.persona b{display:block;font-size:16px;margin-bottom:6px}
+.persona span{color:var(--dim);font-size:13.5px;line-height:1.5}
+
+label.fld{display:block;font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin:0 0 8px}
+input.code{width:100%;min-height:52px;padding:14px 16px;border-radius:12px;font-family:inherit;
+  font-size:18px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--ink);background:rgba(255,255,255,.05);border:1px solid var(--line)}
+.msg{margin:12px 0 0;font-size:13.5px;min-height:20px}
+.msg.err{color:#FF5D73}.msg.ok{color:var(--green)}
+
+.codebox{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 0}
+.codebox b{font-size:26px;font-weight:800;letter-spacing:.3em;
+  background:linear-gradient(120deg,var(--green),var(--blue));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+
+ul.roster{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:8px}
+ul.roster li{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:12px 16px;font-size:14.5px}
+ul.roster .pts{font-weight:800;font-size:13px;color:var(--green)}
+ul.roster button{min-height:40px;padding:9px 16px;font-size:13px}
+
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:14px 0;border-bottom:1px solid var(--line)}
+.toggle:last-of-type{border-bottom:0}
+.toggle span{font-size:14.5px}
+.switch{position:relative;flex:0 0 auto;width:50px;height:28px}
+.switch input{position:absolute;inset:0;opacity:0;margin:0;width:100%;height:100%;cursor:pointer}
+.switch i{position:absolute;inset:0;border-radius:99px;background:rgba(255,255,255,.12);
+  border:1px solid var(--line);transition:background .2s var(--ease);pointer-events:none}
+.switch i::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;
+  background:var(--ink);transition:transform .2s var(--ease)}
+.switch input:checked + i{background:linear-gradient(135deg,var(--green),var(--blue))}
+.switch input:checked + i::after{transform:translateX(22px)}
+.switch input:focus-visible + i{outline:2px solid var(--green);outline-offset:3px}
+
+.note{font-size:13px;color:var(--dim);border-left:2px solid var(--line);padding:2px 0 2px 14px;margin:16px 0 0}
+
+dialog#pick{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:var(--r);
+  padding:26px 24px;width:min(880px,100% - 32px);max-height:88vh;overflow:auto}
+dialog#pick::backdrop{background:rgba(3,6,8,.82);backdrop-filter:blur(6px)}
+
+
+.links{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.links a{font-size:13.5px;color:var(--dim);border:1px solid var(--line);background:var(--panel);
+  border-radius:99px;padding:10px 18px;text-decoration:none;min-height:40px;display:inline-flex;align-items:center}
+.links a:hover{color:var(--ink)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to main content</a>
+
+<nav id="mnav" aria-label="Main navigation">
+  <a class="mn-logo" href="index.html"><span class="mn-mark">M</span><b>MAATRAM</b></a>
+  <span class="mn-spacer"></span><a class="mn-link" href="index.html">Home</a><a class="mn-link" href="timers.html">Timers</a><a class="mn-link" href="app-gate.html">App Gate</a><a class="mn-link" href="study-room.html">Study Room</a><a class="mn-link" href="stats.html">Stats</a><a class="mn-link" href="leaderboard.html">Leaderboard</a><a class="mn-link" href="socials.html">Socials</a><a class="mn-link" href="download.html">Get the app</a><a class="mn-link active" href="roles.html">Account</a>
+  <div id="mnavAuth">
+    <a id="mnavIn" href="login.html">Sign in</a>
+    <div id="mnavChip">
+      <img id="mnavPic" referrerpolicy="no-referrer" alt="Maatram user profile photo" loading="lazy" decoding="async" width="28" height="28">
+      <span class="nm" id="mnavNm"></span>
+      <span class="pt" id="mnavPts">0 PTS</span>
+      <div id="mnavMenu">
+        <a href="leaderboard.html">🏆 My rank</a>
+        <button class="out" id="mnavOut">Sign out</button>
+      </div>
+    </div>
+  </div>
+</nav>
+<script>
+/* ══ universal nav auth (Firebase session shared across all pages) ══ */
+(async()=>{
+  const chip=document.getElementById('mnavChip'),inBtn=document.getElementById('mnavIn'),
+        menu=document.getElementById('mnavMenu');
+  if(!chip)return;
+  chip.addEventListener('click',e=>{ if(!e.target.closest('#mnavMenu')) menu.classList.toggle('open'); });
+  document.addEventListener('click',e=>{ if(!e.target.closest('#mnavChip')) menu.classList.remove('open'); });
+  if(!(location.protocol==='http:'||location.protocol==='https:'))return;  // file:// → nav stays simple
+  try{
+    const [{initializeApp,getApps,getApp},{getAuth,onAuthStateChanged,signOut},{getFirestore,doc,onSnapshot,runTransaction}]=await Promise.all([
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js')
+    ]);
+    const app=getApps().length?getApp():initializeApp({apiKey:"AIzaSyAjiAm61IkH3wB1tjwOyGRrXAuRMKQyCcQ",authDomain:"maatram-859f4.firebaseapp.com",projectId:"maatram-859f4",storageBucket:"maatram-859f4.firebasestorage.app",messagingSenderId:"770970784123",appId:"1:770970784123:web:7c73c74ddb2179b69dedde"});
+    const auth=getAuth(app),db=getFirestore(app);
+    let unsub=null;
+    /* ══ Maatram points engine (all pages) ══ */
+    let __mtUser=null;
+    window.maatramAward=async function(pts,reason){
+      pts=Math.round(pts); if(!pts) return;
+      /* local bank (works offline / signed-out) */
+      try{
+        const cur=+localStorage.getItem('maatram_points')||0;
+        localStorage.setItem('maatram_points',Math.max(0,cur+pts));
+      }catch(_){}
+      try{ new BroadcastChannel('maatram').postMessage({type:'points',pts}); }catch(_){}
+      try{ parent.postMessage({maatramRelay:{type:'points',pts}},'*'); }catch(_){}
+      mtToast(pts,reason);
+      /* cloud write (clamped to security rules: floor 0, max +200 / −100 per write) */
+      if(__mtUser){
+        const uid=__mtUser.uid;
+        try{
+          await runTransaction(db,async t=>{
+            const r=doc(db,'users',uid);
+            const s=await t.get(r);
+            const cur=(s.exists()&&s.data().points)||0;
+            let nx=cur+pts;
+            nx=Math.max(0,Math.max(cur-100,Math.min(cur+200,nx)));
+            t.set(r,{points:nx},{merge:true});
+          });
+        }catch(e){ console.warn('points write',e); }
+      }
+    };
+    function mtToast(pts,reason){
+      const t=document.createElement('div');
+      t.textContent=(pts>0?'+':'')+pts+' PTS'+(reason?' · '+reason:'');
+      t.style.cssText='position:fixed;top:64px;right:16px;z-index:900;font-family:Sora,Inter,sans-serif;'
+        +'font-weight:800;font-size:13px;letter-spacing:1px;padding:11px 20px;border-radius:100px;'
+        +'backdrop-filter:blur(10px);transition:all .5s cubic-bezier(.2,1.3,.3,1);opacity:0;transform:translateY(-14px);'
+        +(pts>0?'color:#04120f;background:linear-gradient(90deg,#2fe38f,#37b6ff);box-shadow:0 8px 30px -8px rgba(47,227,143,.7);'
+               :'color:#fff;background:linear-gradient(90deg,#ff5d73,#ff9a5d);box-shadow:0 8px 30px -8px rgba(255,93,115,.7);');
+      document.body.appendChild(t);
+      requestAnimationFrame(()=>{t.style.opacity='1';t.style.transform='none';});
+      setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(-14px)';},2600);
+      setTimeout(()=>t.remove(),3200);
+    }
+
+    onAuthStateChanged(auth,u=>{
+      __mtUser=u;
+      if(unsub){unsub();unsub=null;}
+      if(u){
+        inBtn.style.display='none';chip.style.display='flex';
+        document.getElementById('mnavPic').src=u.photoURL||'';
+        document.getElementById('mnavNm').textContent=(u.displayName||'You').split(' ')[0];
+        unsub=onSnapshot(doc(db,'users',u.uid),s=>{
+          document.getElementById('mnavPts').textContent=((s.exists()&&s.data().points)||0)+' PTS';
+        },()=>{});
+      }else{
+        inBtn.style.display='inline-block';chip.style.display='none';
+      }
+    });
+    document.getElementById('mnavOut').onclick=()=>{menu.classList.remove('open');signOut(auth);};
+  }catch(e){console.warn('nav auth',e);}
+})();
+</script>
+
+<main id="main">
+<div class="wrap">
+
+  <!-- ============ A. signed-out gate ============ -->
+  <section id="secGate" hidden>
+    <p class="eyebrow">Account</p>
+    <h1>Sign in to <em>Maatram</em></h1>
+    <p class="lede">One Google sign-in, then pick whether you are a student, a teacher or a parent.</p>
+    <button class="btn" id="gBtn" type="button">Continue with Google</button>
+    <p class="msg" id="gMsg" role="status" aria-live="polite"></p>
+  </section>
+
+  <!-- ============ B. workspace ============ -->
+  <section id="secWs" hidden>
+    <p class="eyebrow" id="wsRole"></p>
+    <h1>Hi, <em id="wsName">there</em></h1>
+
+    <!-- student -->
+    <div id="wsStudent" hidden>
+      <div class="card">
+        <h3>Your points</h3>
+        <p><b id="stPts">0</b> PTS</p>
+      </div>
+      <div class="card">
+        <h3>Your class</h3>
+        <p><span id="stClass">—</span></p>
+      </div>
+      <div class="links">
+        <a href="timers.html">Timers</a><a href="app-gate.html">App Gate</a>
+        <a href="study-room.html">Study Room</a><a href="stats.html">Stats</a>
+        <a href="leaderboard.html">Leaderboard</a>
+      </div>
+    </div>
+
+    <!-- teacher -->
+    <div id="wsTeacher" hidden>
+      <div class="card">
+        <h3>Class code</h3>
+        <p>Students and parents join with this code.</p>
+        <div class="codebox"><b id="tcCode">------</b>
+          <button class="ghost" type="button" id="tcCopy">Copy</button></div>
+      </div>
+      <div class="card">
+        <h3>Students</h3>
+        <p id="tcEmpty">No students have joined yet.</p>
+        <ul class="roster" id="tcRoster"></ul>
+      </div>
+    </div>
+
+    <!-- parent -->
+    <div id="wsParent" hidden>
+      <div class="card">
+        <h3 id="paChild">—</h3>
+        <p><b id="paPts">0</b> PTS</p>
+      </div>
+      <div class="card">
+        <h3>Parental Controls</h3>
+        <p>Account settings</p>
+        <div class="toggle"><span>Show weekly screen-time summary</span>
+          <label class="switch"><input type="checkbox" data-pc="pc1" aria-label="Show weekly screen-time summary"><i></i></label></div>
+        <div class="toggle"><span>Show Hard Lock breaks</span>
+          <label class="switch"><input type="checkbox" data-pc="pc2" aria-label="Show Hard Lock breaks"><i></i></label></div>
+        <div class="toggle"><span>Show App Gate strikes</span>
+          <label class="switch"><input type="checkbox" data-pc="pc3" aria-label="Show App Gate strikes"><i></i></label></div>
+        <p class="note">These settings are saved to this browser only. They do not restrict the
+          phone or laptop. Device-level blocking is done by Hard Lock and the Friction Gate
+          inside the Maatram Android app.</p>
+      </div>
+    </div>
+
+    <section>
+      <h2>Account settings</h2>
+      <p class="sub">Signed in as <span id="wsMail"></span></p>
+      <button class="ghost" type="button" id="switchRole">Change profile</button>
+    </section>
+  </section>
+
+</div>
+</main>
+
+<!-- ============ C. persona modal ============ -->
+<dialog id="pick" aria-labelledby="pickH">
+  <h2 id="pickH">Choose your profile</h2>
+  <p class="sub">This decides what you see in Maatram. You can change it later in account settings.</p>
+
+  <div class="pickgrid" id="pickCards">
+    <button class="persona" type="button" data-role="student" aria-pressed="false">
+      <b>Student Profile</b><span>Standard learner workspace access.</span></button>
+    <button class="persona" type="button" data-role="teacher" aria-pressed="false">
+      <b>Teacher Profile</b><span>Educator management tools access.</span></button>
+    <button class="persona" type="button" data-role="parent" aria-pressed="false">
+      <b>Parent Profile</b><span>Guardian oversight module access.</span></button>
+  </div>
+
+  <!-- step 2: teacher -->
+  <div id="stepTeacher" hidden>
+    <div class="card">
+      <h3>Create your class</h3>
+      <p>You get a 6-character code. Share it with your students and their parents.</p>
+      <div class="codebox" style="margin-top:14px">
+        <button class="btn" type="button" id="mkClass">Create class</button></div>
+    </div>
+  </div>
+
+  <!-- step 2: student / parent -->
+  <div id="stepCode" hidden>
+    <div class="card">
+      <h3>Enter your class code</h3>
+      <label class="fld" for="codeIn">Class code</label>
+      <input class="code" id="codeIn" maxlength="6" autocomplete="off" spellcheck="false"
+             inputmode="text" placeholder="ABC123">
+      <div class="codebox" style="margin-top:14px">
+        <button class="btn" type="button" id="joinBtn">Join</button></div>
+    </div>
+  </div>
+
+  <!-- step 3: parent picks child -->
+  <div id="stepChild" hidden>
+    <div class="card">
+      <h3>Which student is yours?</h3>
+      <p id="chEmpty">No students in this class yet. Ask them to join first.</p>
+      <ul class="roster" id="chList"></ul>
+    </div>
+  </div>
+
+  <p class="msg" id="pMsg" role="status" aria-live="polite"></p>
+  <div class="codebox" style="margin-top:6px">
+    <button class="ghost" type="button" id="pBack" hidden>Back</button></div>
+</dialog>
+
+<script>
+/* ══ Maatram · role gateway ══ */
+(function(){
+  var $=function(id){return document.getElementById(id);};
+  var PCKEY='maatram_pc';
+  var ALPH='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';           /* no I O 0 1 — read-aloud safe */
+  var LABEL={student:'Student profile',teacher:'Teacher profile',parent:'Parent profile'};
+
+  /* ---------- pure helpers (unit-testable) ---------- */
+  function genCode(){
+    var b=new Uint8Array(6); crypto.getRandomValues(b);
+    var s=''; for(var i=0;i<6;i++) s+=ALPH[b[i]%ALPH.length];
+    return s;
+  }
+  function normCode(v){ return String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6); }
+
+  /* ---------- view ---------- */
+  function showGate(){ $('secGate').hidden=false; $('secWs').hidden=true; closePick(); }
+
+  function showWorkspace(p){
+    $('secGate').hidden=true; $('secWs').hidden=false; closePick();
+    $('wsRole').textContent=LABEL[p.role]||'';
+    $('wsName').textContent=(p.name||'there').split(' ')[0];
+    $('wsMail').textContent=p.email||'';
+    $('wsStudent').hidden=p.role!=='student';
+    $('wsTeacher').hidden=p.role!=='teacher';
+    $('wsParent').hidden =p.role!=='parent';
+    if(p.role==='student'){
+      $('stPts').textContent=p.points||0;
+      $('stClass').textContent=p.classCode?('Class code '+p.classCode):'No class joined';
+    }
+    if(p.role==='teacher') $('tcCode').textContent=p.classCode||'------';
+    if(p.role==='parent'){
+      $('paChild').textContent=p.childName||'Your child';
+      $('paPts').textContent=p.childPoints||0;
+    }
+  }
+
+  function renderRoster(list){
+    var ul=$('tcRoster'); ul.textContent='';
+    $('tcEmpty').hidden=list.length>0;
+    list.forEach(function(s){
+      var li=document.createElement('li');
+      var n=document.createElement('span'); n.textContent=s.name||'Student';
+      var p=document.createElement('span'); p.className='pts'; p.textContent=(s.points||0)+' PTS';
+      li.appendChild(n); li.appendChild(p); ul.appendChild(li);
+    });
+  }
+
+  function renderChildren(list,onPick){
+    var ul=$('chList'); ul.textContent='';
+    $('chEmpty').hidden=list.length>0;
+    list.forEach(function(s){
+      var li=document.createElement('li');
+      var n=document.createElement('span'); n.textContent=s.name||'Student';
+      var b=document.createElement('button'); b.className='btn'; b.type='button'; b.textContent='This one';
+      b.onclick=function(){ onPick&&onPick(s); };
+      li.appendChild(n); li.appendChild(b); ul.appendChild(li);
+    });
+  }
+
+  /* ---------- persona modal ---------- */
+  var dlg=$('pick'), hasRole=false;
+  function openPick(){
+    step('cards');
+    if(dlg.open) return;
+    if(dlg.showModal) dlg.showModal(); else dlg.setAttribute('open','');
+  }
+  function closePick(){ if(dlg.open){ if(dlg.close) dlg.close(); else dlg.removeAttribute('open'); } }
+  dlg.addEventListener('cancel',function(e){ if(!hasRole) e.preventDefault(); });  /* first pick is required */
+
+  function step(name){
+    $('pickCards').hidden = name!=='cards';
+    $('stepTeacher').hidden = name!=='teacher';
+    $('stepCode').hidden = name!=='code';
+    $('stepChild').hidden = name!=='child';
+    $('pBack').hidden = name==='cards' && !hasRole;
+    $('pBack').textContent = name==='cards' ? 'Cancel' : 'Back';
+    msg('');
+  }
+  function msg(t,cls){ var m=$('pMsg'); m.textContent=t||''; m.className='msg'+(cls?' '+cls:''); }
+
+  /* ---------- parental controls (local only) ---------- */
+  function pcLoad(){
+    var v={}; try{ v=JSON.parse(localStorage.getItem(PCKEY)||'{}')||{}; }catch(e){}
+    document.querySelectorAll('[data-pc]').forEach(function(i){ i.checked=!!v[i.dataset.pc]; });
+    return v;
+  }
+  function pcSave(){
+    var v={};
+    document.querySelectorAll('[data-pc]').forEach(function(i){ v[i.dataset.pc]=i.checked; });
+    try{ localStorage.setItem(PCKEY,JSON.stringify(v)); }catch(e){}
+    return v;
+  }
+  document.querySelectorAll('[data-pc]').forEach(function(i){ i.addEventListener('change',pcSave); });
+  pcLoad();
+
+  window.__roles={genCode:genCode,normCode:normCode,showGate:showGate,showWorkspace:showWorkspace,
+                  renderRoster:renderRoster,renderChildren:renderChildren,step:step,
+                  pcLoad:pcLoad,pcSave:pcSave};
+
+  /* ---------- live wiring ---------- */
+  showGate();
+  if(!(location.protocol==='http:'||location.protocol==='https:')){
+    $('gBtn').disabled=true;
+    $('gMsg').className='msg err';
+    $('gMsg').textContent='Google sign-in needs a real web address. Open this page on the Maatram site, not from a file.';
+    return;
+  }
+
+  (async function boot(){
+    var m;
+    try{
+      m=await Promise.all([
+        import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),
+        import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js'),
+        import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js')
+      ]);
+    }catch(e){
+      $('gMsg').className='msg err'; $('gMsg').textContent='Could not reach Google. Check your connection and reload.';
+      return;
+    }
+    var A=m[0],U=m[1],F=m[2];
+    var app=A.getApps().length?A.getApp():A.initializeApp({apiKey:"AIzaSyAjiAm61IkH3wB1tjwOyGRrXAuRMKQyCcQ",authDomain:"maatram-859f4.firebaseapp.com",projectId:"maatram-859f4",storageBucket:"maatram-859f4.firebasestorage.app",messagingSenderId:"770970784123",appId:"1:770970784123:web:7c73c74ddb2179b69dedde"});
+    var auth=U.getAuth(app), db=F.getFirestore(app);
+    var subs=[], me=null;
+    function clearSubs(){ subs.forEach(function(f){try{f();}catch(e){}}); subs=[]; }
+
+    $('gBtn').onclick=async function(){
+      $('gBtn').disabled=true; $('gMsg').className='msg'; $('gMsg').textContent='Opening Google sign-in…';
+      try{ await U.signInWithPopup(auth,new U.GoogleAuthProvider()); }
+      catch(e){
+        $('gMsg').className='msg err';
+        $('gMsg').textContent = e.code==='auth/popup-closed-by-user' ? 'Popup closed — try again.'
+          : 'Sign-in failed: '+(e.code||e.message);
+        if(e.code==='auth/unauthorized-domain')
+          console.warn('[Maatram dev] add domain in Firebase → Authentication → Authorized domains:',location.hostname);
+      }
+      $('gBtn').disabled=false;
+    };
+
+    U.onAuthStateChanged(auth, async function(user){
+      clearSubs(); me=user;
+      if(!user){ showGate(); return; }
+      var ref=F.doc(db,'users',user.uid), snap;
+      try{ snap=await F.getDoc(ref); }catch(e){ $('gMsg').className='msg err'; $('gMsg').textContent='Could not load your profile.'; return; }
+      var d=snap.exists()?snap.data():{};
+      try{
+        await F.setDoc(ref,{name:user.displayName||'Student',photo:user.photoURL||'',
+                            points:d.points||0,lastLogin:F.serverTimestamp()},{merge:true});
+      }catch(e){ console.warn('profile write',e); }
+      if(!d.role) openPick(); else enter(user,d);
+    });
+
+    function bounce(){                    /* came from a gated page? go back to it */
+      var n=null;
+      try{ n=sessionStorage.getItem('maatram_next'); sessionStorage.removeItem('maatram_next'); }catch(e){}
+      if(n && /^[a-z0-9-]+\.html$/.test(n) && n!=='roles.html'){ location.replace(n); return true; }
+      return false;
+    }
+    function enter(user,d,fresh){
+      hasRole=true;
+      if(fresh && bounce()) return;
+      showWorkspace({role:d.role,name:user.displayName,email:user.email,points:d.points||0,
+                     classCode:d.classCode,childName:d.childName,childPoints:0});
+      subs.push(F.onSnapshot(F.doc(db,'users',user.uid),function(s){
+        if(!s.exists())return;
+        var v=s.data();
+        if(v.role==='student') $('stPts').textContent=v.points||0;
+      },function(){}));
+
+      if(d.role==='teacher'&&d.classCode){
+        subs.push(F.onSnapshot(F.query(F.collection(db,'users'),F.where('classCode','==',d.classCode)),
+          function(qs){
+            var list=[];
+            qs.forEach(function(doc){ var v=doc.data(); if(v.role==='student') list.push(v); });
+            list.sort(function(a,b){ return (b.points||0)-(a.points||0); });
+            renderRoster(list);
+          },function(e){ console.warn('roster',e); }));
+      }
+      if(d.role==='parent'&&d.childUid){
+        subs.push(F.onSnapshot(F.doc(db,'users',d.childUid),function(s){
+          if(!s.exists())return;
+          var v=s.data();
+          $('paChild').textContent=v.name||'Your child';
+          $('paPts').textContent=v.points||0;
+        },function(){}));
+      }
+    }
+
+    /* --- persona choice --- */
+    var chosen=null, joined=null;
+    document.querySelectorAll('.persona').forEach(function(b){
+      b.onclick=function(){
+        chosen=b.dataset.role;
+        document.querySelectorAll('.persona').forEach(function(x){ x.setAttribute('aria-pressed',String(x===b)); });
+        step(chosen==='teacher'?'teacher':'code');
+      };
+    });
+    $('pBack').onclick=function(){
+      if($('pickCards').hidden===false){ closePick(); return; }
+      chosen=null; joined=null;
+      document.querySelectorAll('.persona').forEach(function(x){ x.setAttribute('aria-pressed','false'); });
+      step('cards'); };
+
+    $('codeIn').addEventListener('input',function(){ this.value=normCode(this.value); });
+
+    $('mkClass').onclick=async function(){
+      if(!me) return;
+      $('mkClass').disabled=true; msg('Creating class…');
+      var code=genCode();
+      try{
+        var ex=await F.getDoc(F.doc(db,'classes',code));
+        if(ex.exists()) code=genCode();                       /* one retry is enough at this scale */
+        await F.setDoc(F.doc(db,'classes',code),{
+          teacherUid:me.uid, teacherName:me.displayName||'Teacher', createdAt:F.serverTimestamp()});
+        await F.setDoc(F.doc(db,'users',me.uid),{role:'teacher',classCode:code},{merge:true});
+        enter(me,{role:'teacher',classCode:code,points:0},true);
+        msg('');
+      }catch(e){
+        msg('Could not create the class: '+(e.code||e.message),'err');
+        console.warn('create class',e);
+      }
+      $('mkClass').disabled=false;
+    };
+
+    $('joinBtn').onclick=async function(){
+      if(!me) return;
+      var code=normCode($('codeIn').value);
+      if(code.length!==6){ msg('A class code is 6 characters.','err'); return; }
+      $('joinBtn').disabled=true; msg('Checking…');
+      try{
+        var c=await F.getDoc(F.doc(db,'classes',code));
+        if(!c.exists()){ msg('No class with that code.','err'); $('joinBtn').disabled=false; return; }
+        joined=code;
+        if(chosen==='student'){
+          await F.setDoc(F.doc(db,'users',me.uid),{role:'student',classCode:code},{merge:true});
+          enter(me,{role:'student',classCode:code,points:0},true);
+        }else{
+          var qs=await F.getDocs(F.query(F.collection(db,'users'),F.where('classCode','==',code)));
+          var kids=[];
+          qs.forEach(function(doc){ var v=doc.data(); if(v.role==='student'){ v.uid=doc.id; kids.push(v); } });
+          renderChildren(kids,async function(kid){
+            try{
+              await F.setDoc(F.doc(db,'users',me.uid),
+                {role:'parent',classCode:joined,childUid:kid.uid,childName:kid.name||'Your child'},{merge:true});
+              enter(me,{role:'parent',classCode:joined,childUid:kid.uid,childName:kid.name,points:0},true);
+            }catch(e){ msg('Could not save: '+(e.code||e.message),'err'); }
+          });
+          step('child');
+        }
+        msg('');
+      }catch(e){
+        msg('Could not check that code: '+(e.code||e.message),'err');
+        console.warn('join',e);
+      }
+      $('joinBtn').disabled=false;
+    };
+
+    $('tcCopy').onclick=function(){
+      var c=$('tcCode').textContent;
+      if(navigator.clipboard) navigator.clipboard.writeText(c);
+      $('tcCopy').textContent='Copied'; setTimeout(function(){ $('tcCopy').textContent='Copy'; },1600);
+    };
+
+    $('switchRole').onclick=function(){
+      chosen=null; joined=null; $('codeIn').value='';
+      document.querySelectorAll('.persona').forEach(function(x){ x.setAttribute('aria-pressed','false'); });
+      openPick();
+    };
+  })();
+})();
+</script>
+
+</body>
+</html>
