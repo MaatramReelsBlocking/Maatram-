@@ -120,6 +120,11 @@
     color:#04120f;background:linear-gradient(90deg,var(--green),var(--blue))}
   .ev .go.none{background:transparent;border:1px solid var(--stroke);color:var(--dim);cursor:not-allowed}
   .ev .why{font-size:11px;color:var(--dim);text-align:center}
+  .ev .rm{margin-top:2px;min-height:36px;padding:8px 12px;border-radius:10px;cursor:pointer;
+    background:transparent;border:1px solid var(--stroke);color:var(--dim);
+    font-family:var(--font-display);font-weight:700;font-size:11px;letter-spacing:1px;text-transform:uppercase}
+  .ev .rm:hover{color:#ff5d73;border-color:#ff5d73}
+  .ev .rm.arm{color:#ff5d73;border-color:#ff5d73}
 
   #empty{display:none;text-align:center;padding:56px 20px;color:var(--dim)}
   #empty .big{font-size:44px;margin-bottom:10px}
@@ -476,6 +481,18 @@ fillSelect($('aSport'),SPORTS);
 let savedCity=null; try{savedCity=localStorage.getItem('maatram_city');}catch(_){}
 if(savedCity&&cityNames.indexOf(savedCity)>=0){$('fCity').value=savedCity;$('aCity').value=savedCity;}
 
+/* restore the filter the user last used, so the list looks the same on return */
+try{
+  const sSport=localStorage.getItem('maatram_sport'); const sWhen=localStorage.getItem('maatram_when');
+  if(sSport&&SPORTS.indexOf(sSport)>=0)$('fSport').value=sSport;
+  if(sWhen)$('fWhen').value=sWhen;
+}catch(_){}
+
+/* the Add-an-event boxes belong to the form, not to the filter.
+   Once the user picks their own city or sport, nothing overwrites it again. */
+let addTouched=false;
+['aCity','aSport'].forEach(id=>$(id).addEventListener('change',()=>{addTouched=true;}));
+
 function nearestCity(lat,lng){
   let best=CITIES[0],bd=Infinity;
   for(const c of CITIES){const dx=c[1]-lat,dy=(c[2]-lng)*Math.cos(lat*Math.PI/180),d=dx*dx+dy*dy;
@@ -487,7 +504,8 @@ $('locBtn').onclick=()=>{
   $('locNote').textContent='Finding your nearest city…';
   navigator.geolocation.getCurrentPosition(p=>{
     const city=nearestCity(p.coords.latitude,p.coords.longitude);
-    $('fCity').value=city;$('aCity').value=city;
+    $('fCity').value=city;
+    if(!addTouched)$('aCity').value=city;
     try{localStorage.setItem('maatram_city',city);}catch(_){}
     $('locNote').textContent='Nearest city: '+city;
     render();
@@ -543,18 +561,44 @@ function render(){
         ? '<a class="go" href="'+esc(e.url)+'" target="_blank" rel="noopener noreferrer nofollow">Register on organiser site ↗</a>'
           +'<span class="why">Opens the organiser\u2019s own page</span>'
         : '<span class="go none">No official link given</span>');
+    if(me&&db&&api&&(me.email||'').toLowerCase()===ADMIN_EMAIL){
+      const rm=document.createElement('button');
+      rm.type='button'; rm.className='rm'; rm.textContent='Remove this listing';
+      let armed=false,t=0;
+      rm.onclick=async()=>{
+        if(!armed){
+          armed=true; rm.classList.add('arm'); rm.textContent='Tap again to remove';
+          t=setTimeout(()=>{armed=false;rm.classList.remove('arm');rm.textContent='Remove this listing';},4000);
+          return;
+        }
+        clearTimeout(t); rm.disabled=true; rm.textContent='Removing...';
+        try{ await api.deleteDoc(api.doc(db,'events',e.id)); }
+        catch(err){
+          console.warn('delete event',err);
+          rm.disabled=false; armed=false; rm.classList.remove('arm');
+          rm.textContent='Could not remove: '+(err.code||'error');
+        }
+      };
+      d.appendChild(rm);
+    }
     g.appendChild(d);
     setTimeout(()=>d.classList.add('in'),40+Math.min(i,12)*50);
   });
 }
 ['fCity','fSport','fWhen'].forEach(id=>$(id).addEventListener('change',()=>{
-  if(id==='fCity'){try{localStorage.setItem('maatram_city',$('fCity').value);}catch(_){}}
+  try{
+    if(id==='fCity')localStorage.setItem('maatram_city',$('fCity').value);
+    if(id==='fSport')localStorage.setItem('maatram_sport',$('fSport').value);
+    if(id==='fWhen')localStorage.setItem('maatram_when',$('fWhen').value);
+  }catch(_){}
   if(id==='fSport'){renderCoach();}
   render();
 }));
 $('fQ').addEventListener('input',render);
 
 /* ---------- cloud ---------- */
+/* the Maatram account can take down any listing; everyone else only their own */
+const ADMIN_EMAIL='maatram97@gmail.com';
 let db=null,api=null,me=null;
 async function boot(){
   if(!HOSTED){
@@ -570,14 +614,14 @@ async function boot(){
     ]);
     const app=A.getApps().length?A.getApp():A.initializeApp(FB_CONFIG);
     db=F.getFirestore(app); api=F;
-    U.onAuthStateChanged(U.getAuth(app),u=>{me=u;});
+    U.onAuthStateChanged(U.getAuth(app),u=>{me=u;render();});
     $('modePill').textContent='Live listings';
     $('modePill').style.color='var(--green)';
     F.onSnapshot(F.query(F.collection(db,'events'),F.orderBy('date'),F.limit(200)),snap=>{
       events=[];
       snap.forEach(d=>{const v=d.data();events.push({
         id:d.id,title:v.title||'Event',sport:v.sport||'Other',city:v.city||'',
-        date:v.date||'',venue:v.venue||'',org:v.org||'',url:v.url||''});});
+        date:v.date||'',venue:v.venue||'',org:v.org||'',url:v.url||'',by:v.by||''});});
       render();
     },err=>{
       console.warn('events read',err);
@@ -611,8 +655,16 @@ $('aBtn').onclick=async()=>{
   try{
     ev.by=me.uid; ev.byName=me.displayName||'Student'; ev.createdAt=Date.now();
     await api.addDoc(api.collection(db,'events'),ev);
+    /* show it straight away: an old filter would otherwise hide the new listing */
+    $('fCity').value=ev.city; $('fSport').value=ev.sport; $('fWhen').value='up'; $('fQ').value='';
+    try{
+      localStorage.setItem('maatram_city',ev.city);
+      localStorage.setItem('maatram_sport',ev.sport);
+      localStorage.setItem('maatram_when','up');
+    }catch(_){}
+    renderCoach(); render();
     msg.style.color='var(--green)';
-    msg.textContent='Published. It is live for everyone now.';
+    msg.textContent='Published. Filter moved to '+ev.sport+' in '+ev.city+' so you can see it.';
     $('aTitle').value='';$('aVenue').value='';$('aOrg').value='';$('aUrl').value='';$('aDate').value='';
   }catch(e){
     console.warn('add event',e);

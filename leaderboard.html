@@ -346,7 +346,7 @@ function initials(n){return esc(n.trim().split(/\s+/).map(w=>w[0]).join('').slic
 function competes(v){ return !v || !v.role || v.role==='student'; }
 
 let cloudUsers=[];   // this month's points  (users.points, zeroed on the 1st)
-let cloudLife=[];    // all time              (users.lifetime, never reset)
+let cloudLife=[];    // all time              (users.lifetime + this month's points)
 let TAB='month';
 
 function cycleId(dt){ dt=dt||new Date();
@@ -456,7 +456,7 @@ async function bootCloud(){
   try{
     const [{initializeApp},
            {getAuth,onAuthStateChanged},
-           {getFirestore,collection,query,orderBy,limit,onSnapshot,doc,updateDoc,increment}] = await Promise.all([
+           {getFirestore,collection,query,limit,onSnapshot,doc,updateDoc,increment}] = await Promise.all([
       import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js').then(m=>({initializeApp:c=>m.getApps().length?m.getApp():m.initializeApp(c)})),
       import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js'),
       import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js')
@@ -483,29 +483,28 @@ async function bootCloud(){
       render();
     });
 
-    onSnapshot(query(collection(db,'users'),orderBy('points','desc'),limit(120)),snap=>{
-      cloudUsers=[];
+    /* One read feeds both boards.
+       This month = users.points, zeroed by gate.js on the first load of a new month.
+       All time   = users.lifetime + users.points, so the month in progress is already
+                    counted; when the roll happens, lifetime += points and points -> 0,
+                    which leaves this same total unchanged.
+       ponytail: no orderBy, so a user missing the lifetime field is not silently
+       dropped from the query, and no composite index is needed. */
+    onSnapshot(query(collection(db,'users'),limit(300)),snap=>{
+      cloudUsers=[]; cloudLife=[];
       snap.forEach(d=>{const v=d.data();
         if(!competes(v))return;                       /* teachers and parents do not compete */
-        cloudUsers.push({id:d.id,name:v.name||'Student',photo:v.photo||'',points:v.points||0});});
-      cloudUsers=cloudUsers.slice(0,50);
+        const base={id:d.id,name:v.name||'Student',photo:v.photo||''};
+        cloudUsers.push({...base,points:v.points||0});
+        cloudLife .push({...base,points:(v.lifetime||0)+(v.points||0)});});
+      cloudUsers.sort((a,b)=>b.points-a.points); cloudUsers=cloudUsers.slice(0,50);
+      cloudLife .sort((a,b)=>b.points-a.points); cloudLife =cloudLife .slice(0,50);
       render();
     },err=>{
       console.warn('board read',err);
       $('modePill').textContent='Board offline';
       $('modePill').style.color='#ff5d73';
     });
-
-    /* all-time board: lifetime totals, written by the monthly roll in gate.js.
-       A user only appears here after their first page load of a new month. */
-    onSnapshot(query(collection(db,'users'),orderBy('lifetime','desc'),limit(120)),snap=>{
-      cloudLife=[];
-      snap.forEach(d=>{const v=d.data();
-        if(!competes(v))return;                       /* teachers and parents do not compete */
-        cloudLife.push({id:d.id,name:v.name||'Student',photo:v.photo||'',points:v.lifetime||0});});
-      cloudLife=cloudLife.slice(0,50);
-      if(TAB==='life') render();
-    },err=>{ console.warn('lifetime board read',err); });
   }catch(e){ console.warn('cloud boot failed, local mode',e); }
 }
 bootCloud();

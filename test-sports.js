@@ -132,8 +132,10 @@ ok('cycleNote exists', !!L.getElementById('cycleNote'));
 ok('tablist role', !!L.querySelector('.tabs[role="tablist"]'));
 ok('month tab selected by default', L.getElementById('tabMonth').getAttribute('aria-selected') === 'true');
 ok('tabs are 44px+ targets', /\.tabs button\{min-height:44px/.test(lb));
-ok('lifetime query added', /orderBy\('lifetime','desc'\)/.test(lb));
-ok('monthly query kept', /orderBy\('points','desc'\)/.test(lb));
+ok('one read feeds both boards', (lb.match(/onSnapshot\(query\(collection\(db,'users'\)/g) || []).length === 1);
+ok('all time = lifetime + this month', /lifetime\|\|0\)\+\(v\.points\|\|0\)/.test(lb));
+ok('month board is raw points', /cloudUsers\.push\(\{\.\.\.base,points:v\.points\|\|0\}\)/.test(lb));
+ok('both boards sorted client-side', /cloudUsers\.sort\(/.test(lb) && /cloudLife\s*\.sort\(/.test(lb));
 ok('render picks source by tab', /TAB==='month'\?cloudUsers:cloudLife/.test(lb));
 ok('setTab wired to buttons', /\$\('tabLife'\)\.onclick=\(\)=>setTab\('life'\)/.test(lb));
 ok('reset date shown to users', /scores archive and reset on/.test(lb));
@@ -152,7 +154,7 @@ ok('normal caps still enforced', /resource\.data\.points \+ 200/.test(rules));
 ok('classes block untouched', /match \/classes\/\{code\}/.test(rules));
 
 /* ── 11. flat delivery (he uploads to the repo root) ── */
-const files = fs.readdirSync(__dirname);
+const files = fs.readdirSync(__dirname).filter(f => f !== 'node_modules' && f !== 'package.json' && f !== 'package-lock.json');
 ok('no subfolders in package', files.every(f => !fs.statSync(path.join(__dirname, f)).isDirectory()));
 
 /* ── 12. coach's corner ── */
@@ -181,10 +183,27 @@ ok('notes are inserted as text, not HTML', /li\.textContent=t/.test(sports));
 /* ── 13. teachers and parents are off the board ── */
 ok('competes() helper exists', /function competes\(v\)/.test(lb));
 ok('missing role still competes', /!v\.role \|\| v\.role==='student'/.test(lb));
-ok('monthly query filters non-students', /if\(!competes\(v\)\)return;[\s\S]{0,120}cloudUsers\.push/.test(lb));
-ok('lifetime query filters non-students', /if\(!competes\(v\)\)return;[\s\S]{0,120}cloudLife\.push/.test(lb));
-ok('fetch window widened past the 50 shown', /limit\(120\)/.test(lb));
-ok('still shows only 50', /cloudUsers=cloudUsers\.slice\(0,50\)/.test(lb) && /cloudLife=cloudLife\.slice\(0,50\)/.test(lb));
+ok('board read filters non-students', /if\(!competes\(v\)\)return;[\s\S]{0,200}cloudUsers\.push/.test(lb));
+ok('same filter covers the all-time board', /if\(!competes\(v\)\)return;[\s\S]{0,200}cloudLife\s*\.push/.test(lb));
+ok('fetch window widened past the 50 shown', /limit\(300\)/.test(lb));
+ok('still shows only 50', /cloudUsers=cloudUsers\.slice\(0,50\)/.test(lb) && /cloudLife\s*=cloudLife\s*\.slice\(0,50\)/.test(lb));
+/* -- 14. author/admin removal + sticky filters (Aug 7 round) -- */
+ok('remove button styled', /\.ev \.rm\{/.test(sports));
+ok('author uid carried into the list', /by:v\.by\|\|''/.test(sports));
+ok('board re-renders when auth resolves', /onAuthStateChanged\(U\.getAuth\(app\),u=>\{me=u;render\(\);\}\)/.test(sports));
+ok('remove shown only to the Maatram account', /me&&db&&api&&\(me\.email\|\|''\)\.toLowerCase\(\)===ADMIN_EMAIL/.test(sports));
+ok('admin address is the Maatram inbox', /ADMIN_EMAIL='maatram97@gmail\.com'/.test(sports));
+ok('removal needs a second tap', /Tap again to remove/.test(sports));
+ok('removal calls deleteDoc on the doc id', /api\.deleteDoc\(api\.doc\(db,'events',e\.id\)\)/.test(sports));
+ok('failed removal is reported, not swallowed', /Could not remove: /.test(sports));
+ok('geolocation no longer overwrites a touched add-form city', /if\(!addTouched\)\$\('aCity'\)\.value=city/.test(sports));
+ok('add-form selects track their own edits', /\['aCity','aSport'\]\.forEach/.test(sports));
+ok('sport filter remembered', /localStorage\.setItem\('maatram_sport'/.test(sports));
+ok('when filter remembered', /localStorage\.setItem\('maatram_when'/.test(sports));
+ok('saved filters restored on load', /maatram_sport'\);[\s\S]{0,120}getItem\('maatram_when'/.test(sports));
+ok('publish snaps the filter onto the new event', /\$\('fSport'\)\.value=ev\.sport; \$\('fWhen'\)\.value='up'/.test(sports));
+ok('publish message names where it went', /Filter moved to '\+ev\.sport/.test(sports));
+
 ok('viewer notice markup', !!L.getElementById('watchNote'));
 ok('viewer notice hidden by default', L.getElementById('watchNote').hasAttribute('hidden'));
 ok('notice waits for gate.js role', /MutationObserver[\s\S]{0,200}data-role/.test(lb));
