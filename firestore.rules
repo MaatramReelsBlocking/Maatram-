@@ -9,12 +9,31 @@ service cloud.firestore {
       allow update: if request.auth != null && request.auth.uid == uid
                     && request.resource.data.points is int
                     && request.resource.data.points >= 0
-                    && request.resource.data.points >= resource.data.points - 100  // penalties capped
-                    && request.resource.data.points <= resource.data.points + 200; // gains capped
+                    && (
+                         // normal play: penalties and gains capped
+                         (   request.resource.data.points >= resource.data.points - 100
+                          && request.resource.data.points <= resource.data.points + 200)
+                         // monthly cycle roll: own board zeroed when the month changes
+                      || (   request.resource.data.points == 0
+                          && request.resource.data.cycle != resource.data.cycle)
+                       );
       allow delete: if false;
     }
 
     // classes: created by a teacher, joined (read-only) by students and parents
+    // sports events: any signed-in user lists one, only the author edits it
+    match /events/{id} {
+      allow read:   if request.auth != null;
+      allow create: if request.auth != null
+                    && request.resource.data.by == request.auth.uid
+                    && request.resource.data.title is string
+                    && request.resource.data.title.size() > 0
+                    && request.resource.data.title.size() <= 80
+                    && request.resource.data.date is string;
+      allow update, delete: if request.auth != null
+                    && resource.data.by == request.auth.uid;
+    }
+
     match /classes/{code} {
       allow read: if request.auth != null;
       allow create: if request.auth != null

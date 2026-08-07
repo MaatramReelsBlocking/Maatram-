@@ -17,7 +17,7 @@ ok('reduced-motion path present', /prefers-reduced-motion/.test(HTML));
 ok('skip link', /class="skip"/.test(HTML));
 ok('shared #mnav present', /<nav id="mnav"/.test(HTML));
 ok('nav marks Account active', /class="mn-link active" href="roles\.html"/.test(HTML));
-ok('nav keeps all 9 site links', (HTML.match(/class="mn-link/g)||[]).length===9);
+ok('nav keeps all 10 site links', (HTML.match(/class="mn-link/g)||[]).length===10);
 ok('noindex (private page)', /name="robots" content="noindex/.test(HTML));
 ok('under 50 KB', Buffer.byteLength(HTML)<50*1024);
 ok('persona copy verbatim: student', /Standard learner workspace access\./.test(HTML));

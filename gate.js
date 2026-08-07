@@ -34,6 +34,30 @@
     location.replace('roles.html');
   }
 
+
+  /* ══ monthly leaderboard cycle ══
+     Each signed-in user rolls their OWN doc over on the first page load of a
+     new month: this month's points are archived to m_YYYY-MM, added to the
+     lifetime total, then zeroed. No cron job, no server, no admin key.
+     ponytail: self-reset; move to a Cloud Function only if a user who never
+     opens the site again must still be flushed from the board. */
+  function cycleId(dt){ dt=dt||new Date();
+    return dt.getFullYear()+'-'+('0'+(dt.getMonth()+1)).slice(-2); }
+
+  async function roll(F,db,uid,d){
+    var now=cycleId();
+    if(d.cycle===now) return;
+    var pts=d.points||0, life=d.lifetime||0, patch={cycle:now};
+    if(!d.cycle){                       /* first ever run: adopt, do not wipe */
+      patch.lifetime = life>pts ? life : pts;
+    }else{                              /* new month: archive, then zero */
+      patch.lifetime = life+pts;
+      patch.points   = 0;
+      patch['m_'+d.cycle] = pts;
+    }
+    await F.updateDoc(F.doc(db,'users',uid),patch);
+  }
+
   function start(){
     veil('Checking your sign-in…');
     (async function(){
@@ -56,6 +80,7 @@
         catch(e){ reveal(); return; }       /* read failed: let them work, do not trap them */
         if(!d.role){ send(); return; }
         try{ document.documentElement.dataset.role=d.role; }catch(e){}
+        try{ await roll(F,db,user.uid,d); }catch(e){ }   /* never block the page on this */
         reveal();
       });
     })();

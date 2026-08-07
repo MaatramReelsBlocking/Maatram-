@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+/* ══ MAATRAM Performance Mode — shared across all pages ══ */
+(function(){
+  var KEY='maatram_perf';
+  var weak = matchMedia('(pointer:coarse)').matches
+          || innerWidth<820
+          || (navigator.hardwareConcurrency||8)<=4
+          || (navigator.deviceMemory||8)<=4;
+  var saved=null; try{saved=localStorage.getItem(KEY);}catch(_){}
+  var on = saved===null ? weak : saved==='1';
+  window.MAATRAM_PERF = on;
+  try{ if(saved===null) localStorage.setItem(KEY, on?'1':'0'); }catch(_){}
+  document.documentElement.classList.toggle('perf', on);
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sports Corner — Local Tournaments & Training Camps | Maatram</title>
+
+<meta name="description" content="Find sports tournaments, training camps and physical events near your city, then register on the organiser's own site. Listed by the Maatram community.">
+<meta name="author" content="Maatram">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+<link rel="canonical" href="https://maatram-website.vercel.app/sports.html">
+<link rel="alternate" hreflang="en" href="https://maatram-website.vercel.app/sports.html">
+<link rel="alternate" hreflang="x-default" href="https://maatram-website.vercel.app/sports.html">
+<meta name="theme-color" content="#06090B">
+<meta name="color-scheme" content="dark">
+<meta name="application-name" content="Maatram">
+
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Maatram">
+<meta property="og:locale" content="en_IN">
+<meta property="og:url" content="https://maatram-website.vercel.app/sports.html">
+<meta property="og:title" content="Sports Corner — Local Tournaments & Training Camps | Maatram">
+<meta property="og:description" content="Find sports tournaments, training camps and physical events near your city, then register on the organiser's own site.">
+<meta property="og:image" content="https://maatram-website.vercel.app/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Sports Corner — Local Tournaments & Training Camps | Maatram">
+<meta name="twitter:description" content="Find sports tournaments, training camps and physical events near your city.">
+<meta name="twitter:image" content="https://maatram-website.vercel.app/og-image.png">
+
+<style>
+  :root{--ink:#eafff6;--dim:#7da99b;--green:#2fe38f;--blue:#37b6ff;--gold:#ffd166;
+    --card:rgba(12,28,24,.72);--stroke:rgba(47,227,143,.16);
+    --font-display:'Sora',sans-serif;--font-body:'Inter',system-ui,sans-serif}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#000;color:var(--ink);font-family:var(--font-body);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:clip}
+  #bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+  .wrap{position:relative;z-index:2;max-width:960px;margin:0 auto;padding:42px 18px 90px}
+
+  header{display:flex;align-items:center;justify-content:space-between;margin-bottom:34px;flex-wrap:wrap;gap:12px}
+  .brand{display:flex;align-items:center;gap:13px}
+  .brand-mark{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--green),var(--blue));display:grid;place-items:center;font-family:var(--font-display);font-weight:800;color:#04120f;font-size:21px}
+  .brand h1{font-family:var(--font-display);font-size:19px;font-weight:700}
+  .brand span{display:block;font-size:11px;color:var(--dim);letter-spacing:2.4px;text-transform:uppercase;font-weight:500}
+  .mode-pill{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;font-weight:700;padding:8px 16px;border-radius:100px;border:1px solid var(--stroke);color:var(--dim)}
+
+  .hero{text-align:center;margin-bottom:32px}
+  .hero h2{font-family:var(--font-display);font-weight:900;font-size:clamp(28px,6vw,50px);letter-spacing:1px;
+    text-shadow:0 0 22px rgba(47,227,143,.6),0 0 60px rgba(55,182,255,.3)}
+  .hero p{color:var(--dim);font-size:13px;letter-spacing:1.5px;text-transform:uppercase;margin-top:6px}
+
+  /* filter bar */
+  .filters{background:var(--card);border:1px solid var(--stroke);border-radius:20px;
+    -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);padding:18px;margin-bottom:14px;
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .fld{display:flex;flex-direction:column;gap:6px;min-width:0}
+  .fld label{font-size:10px;letter-spacing:1.4px;text-transform:uppercase;font-weight:700;color:var(--dim)}
+  select,input[type=text],input[type=date],input[type=url]{width:100%;padding:12px 14px;border-radius:12px;
+    border:1px solid var(--stroke);background:rgba(255,255,255,.04);color:var(--ink);
+    font-family:var(--font-body);font-size:15px;outline:none;transition:border-color .3s}
+  select:focus,input:focus{border-color:rgba(55,182,255,.5)}
+  input::placeholder{color:var(--dim)}
+  option{background:#06120f;color:var(--ink)}
+  .btn{padding:12px 20px;border-radius:12px;border:none;cursor:pointer;min-height:44px;
+    font-family:var(--font-display);font-weight:800;font-size:12px;letter-spacing:1.3px;text-transform:uppercase;
+    color:#04120f;background:linear-gradient(90deg,var(--green),var(--blue));transition:transform .25s}
+  .btn:hover{transform:scale(1.03)} .btn:active{transform:scale(.97)}
+  .btn.ghost{background:transparent;border:1px solid var(--stroke);color:var(--ink)}
+  .locrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:26px}
+  #locNote{font-size:12px;color:var(--dim)}
+
+  /* ══ coach's corner ══ */
+  .coach{background:var(--card);border:1px solid var(--stroke);border-radius:20px;padding:20px;
+    -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);margin-bottom:26px}
+  .coach .ch{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .coach h3{font-family:var(--font-display);font-size:14px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:var(--green)}
+  .coach .for{font-size:11px;letter-spacing:1.3px;text-transform:uppercase;color:var(--dim)}
+  .coach ol{list-style:none;display:flex;flex-direction:column;gap:10px;counter-reset:cq}
+  .coach li{counter-increment:cq;display:grid;grid-template-columns:26px minmax(0,1fr);gap:12px;
+    font-size:14px;line-height:1.55;color:var(--ink)}
+  .coach li::before{content:counter(cq);font-family:var(--font-display);font-weight:800;font-size:12px;
+    color:var(--blue);padding-top:3px}
+  .coach .src{margin-top:14px;font-size:11px;color:var(--dim);line-height:1.6}
+
+  /* event cards */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:14px}
+  .ev{background:var(--card);border:1px solid var(--stroke);border-radius:18px;padding:18px;
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);display:flex;flex-direction:column;gap:9px;
+    opacity:0;transform:translateY(18px);transition:opacity .5s,transform .5s}
+  .ev.in{opacity:1;transform:none}
+  .ev .tags{display:flex;gap:6px;flex-wrap:wrap}
+  .tag{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;font-weight:800;padding:4px 10px;
+    border-radius:100px;border:1px solid var(--stroke);color:var(--green)}
+  .tag.city{color:var(--blue);border-color:rgba(55,182,255,.3)}
+  .ev h3{font-family:var(--font-display);font-size:16px;font-weight:700;line-height:1.35}
+  .ev .meta{font-size:13px;color:var(--dim);line-height:1.6}
+  .ev .go{margin-top:auto;display:inline-flex;align-items:center;justify-content:center;gap:7px;
+    min-height:44px;padding:12px 16px;border-radius:12px;text-decoration:none;
+    font-family:var(--font-display);font-weight:800;font-size:12px;letter-spacing:1.2px;text-transform:uppercase;
+    color:#04120f;background:linear-gradient(90deg,var(--green),var(--blue))}
+  .ev .go.none{background:transparent;border:1px solid var(--stroke);color:var(--dim);cursor:not-allowed}
+  .ev .why{font-size:11px;color:var(--dim);text-align:center}
+
+  #empty{display:none;text-align:center;padding:56px 20px;color:var(--dim)}
+  #empty .big{font-size:44px;margin-bottom:10px}
+  #empty b{display:block;color:var(--ink);font-family:var(--font-display);font-size:16px;margin-bottom:8px}
+
+  /* add event */
+  details.add{margin-top:34px;background:var(--card);border:1px solid var(--stroke);border-radius:20px;padding:16px 18px}
+  details.add summary{cursor:pointer;font-family:var(--font-display);font-weight:800;font-size:12px;
+    letter-spacing:1.3px;text-transform:uppercase;color:var(--green);min-height:32px;display:flex;align-items:center}
+  .form{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px;margin-top:16px}
+  .form .full{grid-column:1/-1}
+  #addMsg{font-size:13px;margin-top:10px;min-height:18px}
+  footer{margin-top:46px;text-align:center;font-size:11px;color:var(--dim);letter-spacing:1.4px;text-transform:uppercase}
+
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ══ MAATRAM UNIVERSAL NAV ══ */
+#mnav{position:fixed;top:0;left:0;right:0;height:52px;z-index:600;display:flex;align-items:center;gap:5px;
+  padding:0 14px;background:rgba(2,10,8,.82);backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(47,227,143,.15);font-family:'Sora','Inter',system-ui,sans-serif;cursor:auto}
+#mnav *{cursor:pointer}
+#mnav .mn-logo{display:flex;align-items:center;gap:8px;margin-right:10px;text-decoration:none;color:#eafff6}
+#mnav .mn-mark{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#2fe38f,#37b6ff);
+  display:grid;place-items:center;font-weight:800;color:#04120f;font-size:14px}
+#mnav .mn-logo b{font-size:13px;font-weight:700;letter-spacing:.4px}
+#mnav .mn-spacer{flex:1}
+#mnav a.mn-link{font-size:10.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;
+  color:#7da99b;text-decoration:none;padding:7px 11px;border-radius:100px;transition:all .25s;white-space:nowrap}
+#mnav a.mn-link:hover{color:#eafff6;background:rgba(55,182,255,.1)}
+#mnav a.mn-link.active{color:#04120f;background:linear-gradient(90deg,#2fe38f,#37b6ff)}
+#mnavAuth{display:flex;align-items:center;gap:8px;margin-left:6px}
+#mnavIn{font-size:10.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#04120f;
+  text-decoration:none;padding:8px 16px;border-radius:100px;background:linear-gradient(90deg,#2fe38f,#37b6ff);white-space:nowrap}
+#mnavChip{display:none;align-items:center;gap:8px;padding:4px 6px;border-radius:100px;
+  border:1px solid rgba(47,227,143,.3);background:rgba(47,227,143,.06);position:relative}
+#mnavChip img{width:28px;height:28px;border-radius:50%;border:1px solid #2fe38f}
+#mnavChip .nm{font-size:12px;font-weight:700;color:#eafff6;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#mnavChip .pt{font-size:10px;font-weight:800;color:#ffd166;letter-spacing:.5px;padding:3px 8px;border-radius:100px;
+  border:1px solid rgba(255,209,102,.35);background:rgba(255,209,102,.08);white-space:nowrap}
+#mnavMenu{display:none;position:absolute;top:44px;right:0;min-width:180px;z-index:700;
+  background:rgba(6,18,14,.97);border:1px solid rgba(47,227,143,.25);border-radius:14px;padding:8px;
+  box-shadow:0 18px 50px -12px rgba(0,0,0,.8)}
+#mnavMenu.open{display:block}
+#mnavMenu button,#mnavMenu a{display:block;width:100%;text-align:left;padding:10px 13px;border-radius:9px;
+  background:transparent;border:none;color:#eafff6;font-family:inherit;font-size:12px;font-weight:600;text-decoration:none;transition:background .2s}
+#mnavMenu button:hover,#mnavMenu a:hover{background:rgba(55,182,255,.12)}
+#mnavMenu .out{color:#ff5d73}
+@media(max-width:860px){#mnav{overflow-x:auto;scrollbar-width:none}#mnav::-webkit-scrollbar{display:none}
+  #mnav .mn-logo b{display:none}#mnavChip .nm{display:none}}
+body{padding-top:52px!important}
+
+  /* ══ performance-mode toggle button (all pages) ══ */
+  #perfBtn{position:fixed;bottom:18px;left:18px;z-index:900;display:flex;align-items:center;gap:8px;
+    padding:8px 14px;border-radius:100px;border:1px solid rgba(255,255,255,.18);cursor:pointer;
+    background:rgba(6,18,15,.8);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);color:#cfe9dd;
+    font-family:inherit;font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;
+    transition:border-color .25s,color .25s}
+  #perfBtn:hover{border-color:rgba(47,227,143,.55);color:#eafff6}
+  #perfBtn .pf-ic{font-size:13px;line-height:1}
+  #perfBtn .pf-sw{width:28px;height:15px;border-radius:100px;border:1px solid rgba(255,255,255,.3);position:relative;transition:all .25s;flex-shrink:0}
+  #perfBtn .pf-sw::after{content:"";position:absolute;top:1.5px;left:2px;width:10px;height:10px;border-radius:50%;background:#cfe9dd;transition:all .25s}
+  html.perf #perfBtn .pf-sw{background:linear-gradient(90deg,#2fe38f,#37b6ff);border-color:transparent}
+  html.perf #perfBtn .pf-sw::after{left:14px;background:#04120f}
+  html.perf #perfBtn{border-color:rgba(47,227,143,.4)}
+  @media(pointer:coarse){#perfBtn{bottom:12px;left:12px}}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800;900&family=Inter:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800;900&family=Inter:wght@400;500;600&display=swap" media="print" onload="this.media='all';this.onload=null">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800;900&family=Inter:wght@400;500;600&display=swap"></noscript>
+<script src="theme.js"></script>
+<script src="gate.js"></script>
+<style>.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}</style>
+<style id="a11yCSS">
+.skip-link{position:absolute;left:-9999px;top:0;z-index:100000;padding:12px 18px;border-radius:0 0 12px 0;
+  background:#34D399;color:#04120F;font:600 14px/1 Inter,system-ui,sans-serif;text-decoration:none}
+.skip-link:focus{left:0}
+:focus-visible{outline:2px solid #34D399;outline-offset:2px}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to main content</a>
+<nav id="mnav" aria-label="Main navigation">
+  <a class="mn-logo" href="index.html"><span class="mn-mark">M</span><b>MAATRAM</b></a>
+  <span class="mn-spacer"></span><a class="mn-link" href="index.html">Home</a><a class="mn-link" href="timers.html">Timers</a><a class="mn-link" href="app-gate.html">App Gate</a><a class="mn-link" href="study-room.html">Study Room</a><a class="mn-link" href="stats.html">Stats</a><a class="mn-link" href="leaderboard.html">Leaderboard</a><a class="mn-link active" href="sports.html">Sports</a><a class="mn-link" href="socials.html">Socials</a><a class="mn-link" href="download.html">Get the app</a><a class="mn-link" href="roles.html">Account</a>
+  <div id="mnavAuth">
+    <a id="mnavIn" href="login.html">Sign in</a>
+    <div id="mnavChip">
+      <img id="mnavPic" referrerpolicy="no-referrer" alt="Maatram user profile photo" loading="lazy" decoding="async" width="28" height="28">
+      <span class="nm" id="mnavNm"></span>
+      <span class="pt" id="mnavPts">0 PTS</span>
+      <div id="mnavMenu">
+        <a href="leaderboard.html">🏆 My rank</a>
+        <button class="out" id="mnavOut">Sign out</button>
+      </div>
+    </div>
+  </div>
+</nav>
+<canvas id="bg"></canvas>
+
+<div class="wrap" id="main" role="main" tabindex="-1">
+  <header>
+    <div class="brand">
+      <div class="brand-mark">M</div>
+      <div><h1>Maatram</h1><span>Sports Corner</span></div>
+    </div>
+    <div class="mode-pill" id="modePill">Loading…</div>
+  </header>
+
+  <div class="hero">
+    <h2>GET OFF THE SCREEN</h2>
+    <p>Tournaments · Training camps · Meet-ups near you</p>
+  </div>
+
+  <div class="locrow">
+    <button class="btn ghost" id="locBtn" type="button">📍 Use my location</button>
+    <span id="locNote">Pick your city, or let the browser find the nearest one.</span>
+  </div>
+
+  <div class="filters">
+    <div class="fld">
+      <label for="fCity">City</label>
+      <select id="fCity"></select>
+    </div>
+    <div class="fld">
+      <label for="fSport">Sport</label>
+      <select id="fSport"></select>
+    </div>
+    <div class="fld">
+      <label for="fWhen">When</label>
+      <select id="fWhen">
+        <option value="up">Upcoming</option>
+        <option value="7">Next 7 days</option>
+        <option value="30">Next 30 days</option>
+        <option value="all">All, including past</option>
+      </select>
+    </div>
+    <div class="fld">
+      <label for="fQ">Search</label>
+      <input type="text" id="fQ" placeholder="Name or venue" autocomplete="off">
+    </div>
+  </div>
+
+  <section class="coach" id="coach" aria-labelledby="coachH">
+    <div class="ch">
+      <h3 id="coachH">Coach's corner</h3>
+      <span class="for" id="coachFor"></span>
+    </div>
+    <ol id="coachList"></ol>
+    <p class="src">Training notes written for Maatram. Change the Sport filter above to switch the sport.</p>
+  </section>
+
+  <p id="count" style="font-size:12px;color:var(--dim);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:14px"></p>
+
+  <div class="grid" id="grid"></div>
+
+  <div id="empty">
+    <div class="big">🏟️</div>
+    <b>Nothing listed here yet.</b>
+    <p>No events match this filter. Widen the city or the date range — or add an event you know about, so everyone else finds it.</p>
+  </div>
+
+  <details class="add">
+    <summary>+ Add an event</summary>
+    <p style="font-size:13px;color:var(--dim);margin-top:12px">List a real tournament, camp or match. The register link must point to the organiser's own page — Maatram never takes registrations.</p>
+    <div class="form">
+      <input type="text" id="aTitle" maxlength="80" placeholder="Event name" autocomplete="off">
+      <select id="aSport"></select>
+      <select id="aCity"></select>
+      <input type="date" id="aDate">
+      <input type="text" id="aVenue" maxlength="80" placeholder="Venue" autocomplete="off">
+      <input type="text" id="aOrg" maxlength="60" placeholder="Organiser" autocomplete="off">
+      <input type="url" class="full" id="aUrl" placeholder="Official registration link (https://…)" autocomplete="off">
+      <button class="btn full" id="aBtn" type="button">Publish event</button>
+    </div>
+    <p id="addMsg"></p>
+  </details>
+
+  <footer>MAATRAM · <b>Action ⟹ Value</b> · Registration happens on the organiser's site</footer>
+</div>
+
+<script>
+/* ══ Maatram · Sports Corner ══
+   Listings live in Firestore `events`. Register buttons are plain outbound
+   links to the organiser — nothing is registered or paid for on Maatram,
+   and no points are awarded here. */
+const FB_CONFIG = {
+  apiKey: "AIzaSyAjiAm61IkH3wB1tjwOyGRrXAuRMKQyCcQ",
+  authDomain: "maatram-859f4.firebaseapp.com",
+  projectId: "maatram-859f4",
+  storageBucket: "maatram-859f4.firebasestorage.app",
+  messagingSenderId: "770970784123",
+  appId: "1:770970784123:web:7c73c74ddb2179b69dedde"
+};
+const HOSTED = location.protocol==='http:'||location.protocol==='https:';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* Tamil Nadu + nearby cities. Used for the picker and for nearest-city lookup,
+   so no map lookup service and no API key is needed. */
+const CITIES=[
+  ['Coimbatore',11.0168,76.9558],['Chennai',13.0827,80.2707],['Madurai',9.9252,78.1198],
+  ['Tiruchirappalli',10.7905,78.7047],['Salem',11.6643,78.1460],['Erode',11.3410,77.7172],
+  ['Tirupur',11.1085,77.3411],['Vellore',12.9165,79.1325],['Thoothukudi',8.7642,78.1348],
+  ['Tirunelveli',8.7139,77.7567],['Thanjavur',10.7870,79.1378],['Dindigul',10.3673,77.9803],
+  ['Kanchipuram',12.8342,79.7036],['Cuddalore',11.7480,79.7714],['Nagercoil',8.1833,77.4119],
+  ['Hosur',12.7409,77.8253],['Karur',10.9601,78.0766],['Ooty',11.4102,76.6950],
+  ['Namakkal',11.2189,78.1674],['Pollachi',10.6589,77.0085],['Sivakasi',9.4533,77.7987],
+  ['Puducherry',11.9416,79.8083],['Bengaluru',12.9716,77.5946],['Kochi',9.9312,76.2673]
+];
+const SPORTS=['Athletics','Badminton','Basketball','Chess','Cricket','Cycling','Football','Hockey',
+  'Kabaddi','Karate','Running','Skating','Swimming','Table Tennis','Tennis','Volleyball','Yoga','Other'];
+
+/* Coach's corner: five training notes per sport, written for Maatram.
+   Deliberately NOT attributed to real coaches or athletes -- putting invented
+   words in a real person's mouth on a public page is not something we do.
+   Swap in sourced quotations later if you want named ones. */
+const COACH={
+  Athletics:[
+    'Warm up longer than you think you need — cold muscles are the number one reason a season ends early.',
+    'Run the first lap slower than the last. Negative splits win races; brave starts lose them.',
+    'Drive the arms and the legs follow. Fix the arms before you fix anything else.',
+    'Log every session: distance, effort, sleep. Patterns show up in the notebook long before they show up in the legs.',
+    'One hard day, one easy day. Two hard days in a row is not training, it is damage.'],
+  Badminton:[
+    'Return to the middle after every shot. Court position beats a hard smash almost every time.',
+    'Play the shuttle early and high. Late contact hands your opponent the attack.',
+    'Learn the drop before the smash. Rallies are won by making the other player move, not by hitting harder.',
+    'Grip loose, then tighten only at contact. A tight grip all rally long kills wrist speed.',
+    'Watch your opponent\'s racket face, not the shuttle. It tells you where the shuttle is going one beat sooner.'],
+  Basketball:[
+    'Shoot the same way every single time. Repeatable beats pretty.',
+    'Defence is footwork, not hands. Move your feet and you never need to reach.',
+    'Pass out of a double team within two seconds. Holding the ball is how turnovers happen.',
+    'Practise free throws when you are tired, because that is when the game gives them to you.',
+    'Call the switch out loud. Silent defence is broken defence.'],
+  Chess:[
+    'Develop every piece before you attack. A lone queen raid is the fastest way to lose tempo.',
+    'Before you move, ask what your opponent\'s last move threatened.',
+    'Trade pieces when you are ahead in material, trade pawns when you are behind.',
+    'Write down your games and replay your losses. You learn nothing from the ones you won easily.',
+    'Time is a piece. Spend it on the two or three moves that decide the position, not on the obvious ones.'],
+  Cricket:[
+    'Watch the ball out of the hand, not off the pitch. The decision is made before it bounces.',
+    'Play straight early in the innings. Cross-bat shots come after your eye is in.',
+    'Bowl one line for a full over. Wickets come from pressure built ball after ball.',
+    'Back up every throw. Overthrows are runs nobody earned.',
+    'Between overs, agree the plan out loud with your partner. Silent partnerships get run out.'],
+  Cycling:[
+    'Spin a lighter gear at a higher cadence. Grinding big gears wrecks knees.',
+    'Brake before the corner, not in it. Then look where you want to exit.',
+    'Drink before you feel thirsty. By the time you feel it, power is already gone.',
+    'Check tyre pressure and brakes before every ride. Two minutes now, no walk home later.',
+    'On the road, ride predictably and signal early. Being seen matters more than being fast.'],
+  Football:[
+    'Look up before you receive, not after. The picture you take early decides the pass.',
+    'First touch away from pressure. Where the ball lands is more important than how it looks.',
+    'Defend the space, not the player. Close the passing lane and the tackle becomes easy.',
+    'Sprint back the moment you lose the ball. The first five seconds decide the counter-attack.',
+    'Talk. A defence that communicates concedes far fewer goals than one that just runs.'],
+  Hockey:[
+    'Keep the stick down and the blade flat. Balls lift off a raised stick and go nowhere useful.',
+    'Receive on the move. Stopping the ball dead means stopping the attack too.',
+    'Push passes are faster and more accurate than hits over short range.',
+    'Low body position wins every tackle. Bend the knees, not the back.',
+    'Mark goal-side at penalty corners and know your job before the whistle.'],
+  Kabaddi:[
+    'Control the breath before the raid. A short raid you can finish beats a long one you cannot.',
+    'Touch and turn immediately. The point is the return line, not the touch.',
+    'Chain defence holds only if hands stay linked. One loose hand loses the whole formation.',
+    'Watch the raider\'s hips, not the feet. Feet lie, hips do not.',
+    'Ankle holds go low and early. Reaching high gets you dragged over the line.'],
+  Karate:[
+    'Stance first. Every technique is only as strong as the base under it.',
+    'Speed comes from relaxation. Tense muscles are slow muscles; tighten only at impact.',
+    'Practise the basics far longer than feels interesting. Grades are built on them.',
+    'Bow in and bow out. Control off the mat is the point of control on it.',
+    'Never spar without a supervising instructor, and stop the moment a partner signals.'],
+  Running:[
+    'Build weekly distance by roughly a tenth at a time. Most injuries come from doing too much too soon.',
+    'Land under your hips, not out in front. Overstriding brakes you on every step.',
+    'Breathe in a rhythm you can hold a conversation over for easy runs.',
+    'Rotate shoes and replace them when the cushioning is dead, not when they look worn.',
+    'One full rest day a week. Adaptation happens on the day off, not on the run.'],
+  Skating:[
+    'Learn to fall safely and to stop before you learn to go fast.',
+    'Helmet, wrist guards, knee pads. Wrists take the first fall almost every time.',
+    'Bend the knees and keep the weight low. Standing tall is how you lose an edge.',
+    'Look where you are going, not at your feet.',
+    'Skate a smooth, empty surface until the basics are automatic. Traffic is not a training ground.'],
+  Swimming:[
+    'Never swim alone, and never in water you have not been told is safe.',
+    'Long strokes beat fast strokes. Count strokes per length and try to reduce the count.',
+    'Exhale fully underwater so the only thing you do above water is breathe in.',
+    'Keep the head still and low. Lifting the head drops the hips and doubles the drag.',
+    'Kick from the hip, not the knee. Bicycle kicks waste energy and go nowhere.'],
+  'Table Tennis':[
+    'Return to ready position after every shot. Recovery is the stroke nobody practises.',
+    'Read the opponent\'s bat angle at contact to know the spin.',
+    'Play from the legs. Arm-only shots have no control and no power.',
+    'Serve short and low most of the time. A long serve is a free attack for them.',
+    'Practise one stroke for a hundred balls before moving on. Repetition builds the reflex.'],
+  Tennis:[
+    'Split step as your opponent strikes the ball. It is the single biggest jump in court coverage.',
+    'Take the racket back early. Late preparation causes almost every framed shot.',
+    'Aim a metre inside the lines. Matches are lost on errors far more than won on winners.',
+    'Hit up and across for topspin — that is what brings the ball down inside the baseline.',
+    'Between points, follow the same routine every time. Routine steadies nerves.'],
+  Volleyball:[
+    'Platform first, then move. Swinging the arms at the ball sends it anywhere.',
+    'Call the ball loudly, every time, even when it is obvious.',
+    'Approach the spike in a rhythm you repeat exactly. Timing beats jump height.',
+    'Serve deep and to the seams between receivers.',
+    'Block with hands over the net and eyes on the hitter\'s shoulder.'],
+  Yoga:[
+    'Breath leads, body follows. If the breath is ragged, come out of the pose.',
+    'Range of motion is earned over months. Forcing a stretch is how people tear things.',
+    'Hold fewer poses for longer rather than rushing through many.',
+    'Practise on an empty stomach, and never push through sharp pain.',
+    'Finish every session with a few minutes of stillness. That is when the work settles.'],
+  Other:[
+    'Warm up, cool down, and sleep. Those three do more than any training plan.',
+    'Learn the rules of your sport properly. Confidence comes from knowing what is allowed.',
+    'Train with someone slightly better than you.',
+    'Track one number weekly so progress is visible even when it feels slow.',
+    'Play the sport you actually enjoy. The one you keep doing is the one that works.']
+};
+
+function renderCoach(){
+  const picked=$('fSport').value;
+  /* no sport chosen: rotate one per day so the page is never the same twice */
+  const keys=Object.keys(COACH);
+  const sport = picked && COACH[picked] ? picked
+    : keys[Math.floor(Date.now()/86400000)%keys.length];
+  $('coachFor').textContent=sport+(picked?'':' \u00b7 today\u2019s five');
+  const ol=$('coachList');
+  ol.innerHTML='';
+  COACH[sport].forEach(t=>{const li=document.createElement('li');li.textContent=t;ol.appendChild(li);});
+}
+
+/* ---------- filter controls ---------- */
+function fillSelect(el,items,firstLabel,firstValue){
+  el.innerHTML='';
+  if(firstLabel!==undefined){const o=document.createElement('option');o.value=firstValue;o.textContent=firstLabel;el.appendChild(o);}
+  items.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;el.appendChild(o);});
+}
+const cityNames=CITIES.map(c=>c[0]);
+fillSelect($('fCity'),cityNames,'All cities','');
+fillSelect($('fSport'),SPORTS,'All sports','');
+fillSelect($('aCity'),cityNames);
+fillSelect($('aSport'),SPORTS);
+
+let savedCity=null; try{savedCity=localStorage.getItem('maatram_city');}catch(_){}
+if(savedCity&&cityNames.indexOf(savedCity)>=0){$('fCity').value=savedCity;$('aCity').value=savedCity;}
+
+function nearestCity(lat,lng){
+  let best=CITIES[0],bd=Infinity;
+  for(const c of CITIES){const dx=c[1]-lat,dy=(c[2]-lng)*Math.cos(lat*Math.PI/180),d=dx*dx+dy*dy;
+    if(d<bd){bd=d;best=c;}}
+  return best[0];
+}
+$('locBtn').onclick=()=>{
+  if(!navigator.geolocation){$('locNote').textContent='This browser cannot share a location. Pick a city instead.';return;}
+  $('locNote').textContent='Finding your nearest city…';
+  navigator.geolocation.getCurrentPosition(p=>{
+    const city=nearestCity(p.coords.latitude,p.coords.longitude);
+    $('fCity').value=city;$('aCity').value=city;
+    try{localStorage.setItem('maatram_city',city);}catch(_){}
+    $('locNote').textContent='Nearest city: '+city;
+    render();
+  },()=>{ $('locNote').textContent='Location was blocked. Pick a city from the list.'; },{timeout:8000});
+};
+
+/* ---------- data ---------- */
+let events=[];
+function today(){const d=new Date();d.setHours(0,0,0,0);return d;}
+function dayDiff(iso){
+  const d=new Date(iso+'T00:00:00');
+  if(isNaN(d))return null;
+  return Math.round((d-today())/86400000);
+}
+function whenLabel(iso){
+  const n=dayDiff(iso);
+  if(n===null)return esc(iso);
+  const nice=new Date(iso+'T00:00:00').toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});
+  if(n<0)return nice+' · finished';
+  if(n===0)return nice+' · today';
+  if(n===1)return nice+' · tomorrow';
+  return nice+' · in '+n+' days';
+}
+function passes(e){
+  const city=$('fCity').value, sport=$('fSport').value, when=$('fWhen').value,
+        q=$('fQ').value.trim().toLowerCase();
+  if(city&&e.city!==city)return false;
+  if(sport&&e.sport!==sport)return false;
+  const n=dayDiff(e.date);
+  if(when!=='all'){
+    if(n===null||n<0)return false;
+    if(when!=='up'&&n>+when)return false;
+  }
+  if(q&&!((e.title+' '+(e.venue||'')+' '+(e.org||'')).toLowerCase().includes(q)))return false;
+  return true;
+}
+function render(){
+  const list=events.filter(passes).sort((a,b)=>a.date<b.date?-1:1);
+  const g=$('grid');
+  g.innerHTML='';
+  $('empty').style.display=list.length?'none':'block';
+  $('count').textContent=list.length?(list.length+(list.length===1?' event':' events')):'';
+  list.forEach((e,i)=>{
+    const safe=/^https:\/\/|^http:\/\//i.test(e.url||'');
+    const d=document.createElement('article');
+    d.className='ev';
+    d.innerHTML='<div class="tags"><span class="tag">'+esc(e.sport)+'</span><span class="tag city">'+esc(e.city)+'</span></div>'
+      +'<h3>'+esc(e.title)+'</h3>'
+      +'<p class="meta">'+whenLabel(e.date)
+      +(e.venue?'<br>'+esc(e.venue):'')
+      +(e.org?'<br>By '+esc(e.org):'')+'</p>'
+      +(safe
+        ? '<a class="go" href="'+esc(e.url)+'" target="_blank" rel="noopener noreferrer nofollow">Register on organiser site ↗</a>'
+          +'<span class="why">Opens the organiser\u2019s own page</span>'
+        : '<span class="go none">No official link given</span>');
+    g.appendChild(d);
+    setTimeout(()=>d.classList.add('in'),40+Math.min(i,12)*50);
+  });
+}
+['fCity','fSport','fWhen'].forEach(id=>$(id).addEventListener('change',()=>{
+  if(id==='fCity'){try{localStorage.setItem('maatram_city',$('fCity').value);}catch(_){}}
+  if(id==='fSport'){renderCoach();}
+  render();
+}));
+$('fQ').addEventListener('input',render);
+
+/* ---------- cloud ---------- */
+let db=null,api=null,me=null;
+async function boot(){
+  if(!HOSTED){
+    $('modePill').textContent='Offline preview';
+    $('empty').style.display='block';
+    return;
+  }
+  try{
+    const [A,U,F]=await Promise.all([
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js')
+    ]);
+    const app=A.getApps().length?A.getApp():A.initializeApp(FB_CONFIG);
+    db=F.getFirestore(app); api=F;
+    U.onAuthStateChanged(U.getAuth(app),u=>{me=u;});
+    $('modePill').textContent='Live listings';
+    $('modePill').style.color='var(--green)';
+    F.onSnapshot(F.query(F.collection(db,'events'),F.orderBy('date'),F.limit(200)),snap=>{
+      events=[];
+      snap.forEach(d=>{const v=d.data();events.push({
+        id:d.id,title:v.title||'Event',sport:v.sport||'Other',city:v.city||'',
+        date:v.date||'',venue:v.venue||'',org:v.org||'',url:v.url||''});});
+      render();
+    },err=>{
+      console.warn('events read',err);
+      $('modePill').textContent='Listings offline';
+      $('modePill').style.color='#ff5d73';
+      render();
+    });
+  }catch(e){
+    console.warn('sports boot failed',e);
+    $('modePill').textContent='Listings offline';
+    render();
+  }
+}
+boot();
+render();
+renderCoach();
+
+/* ---------- add event ---------- */
+$('aBtn').onclick=async()=>{
+  const msg=$('addMsg');
+  const ev={
+    title:$('aTitle').value.trim(), sport:$('aSport').value, city:$('aCity').value,
+    date:$('aDate').value, venue:$('aVenue').value.trim(), org:$('aOrg').value.trim(),
+    url:$('aUrl').value.trim()
+  };
+  msg.style.color='#ff5d73';
+  if(!ev.title){msg.textContent='Give the event a name.';return;}
+  if(!ev.date){msg.textContent='Pick the date it happens.';return;}
+  if(ev.url&&!/^https?:\/\//i.test(ev.url)){msg.textContent='The link must start with https://';return;}
+  if(!db||!me){msg.textContent='Sign in first, then publish.';return;}
+  try{
+    ev.by=me.uid; ev.byName=me.displayName||'Student'; ev.createdAt=Date.now();
+    await api.addDoc(api.collection(db,'events'),ev);
+    msg.style.color='var(--green)';
+    msg.textContent='Published. It is live for everyone now.';
+    $('aTitle').value='';$('aVenue').value='';$('aOrg').value='';$('aUrl').value='';$('aDate').value='';
+  }catch(e){
+    console.warn('add event',e);
+    msg.textContent='Could not publish: '+(e.code||e.message||'unknown error');
+  }
+};
+
+/* ---------- background: drifting sparks ---------- */
+const cv=$('bg'),ctx=cv.getContext('2d');
+const LITE=(window.MAATRAM_PERF!==undefined)?window.MAATRAM_PERF:(matchMedia('(pointer:coarse)').matches||innerWidth<820||(navigator.hardwareConcurrency||8)<=4);
+const DPR=LITE?1:Math.min(devicePixelRatio||1,1.5);let W,H;
+function fit(){W=Math.max(1,innerWidth);H=Math.max(1,innerHeight);
+  cv.width=W*DPR;cv.height=H*DPR;cv.style.width=W+'px';cv.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0);}
+fit();addEventListener('resize',fit,{passive:true});
+const COLS=['rgb(47,227,143)','rgb(55,182,255)'];
+const dots=[];for(let i=0;i<(LITE?14:34);i++)dots.push({x:Math.random(),y:Math.random(),
+  vx:(Math.random()-.5)*.0009,vy:(Math.random()-.5)*.0009,c:COLS[i%2],s:.9+Math.random()*1.7});
+const reduced=(window.MAATRAM_PERF===true)||matchMedia('(prefers-reduced-motion: reduce)').matches;
+function loop(){
+  ctx.clearRect(0,0,W,H);
+  for(const d of dots){
+    d.x+=d.vx;d.y+=d.vy;
+    if(d.x<0)d.x=1;if(d.x>1)d.x=0;if(d.y<0)d.y=1;if(d.y>1)d.y=0;
+    ctx.globalAlpha=.3;ctx.fillStyle=d.c;
+    ctx.beginPath();ctx.arc(d.x*W,d.y*H,d.s,0,6.283);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+  if(!reduced)requestAnimationFrame(loop);
+}
+if(!reduced)requestAnimationFrame(loop);else loop();
+</script>
+
+<script>
+/* ══ universal nav auth (Firebase session shared across all pages) ══ */
+(async()=>{
+  const chip=document.getElementById('mnavChip'),inBtn=document.getElementById('mnavIn'),
+        menu=document.getElementById('mnavMenu');
+  if(!chip)return;
+  chip.addEventListener('click',e=>{ if(!e.target.closest('#mnavMenu')) menu.classList.toggle('open'); });
+  document.addEventListener('click',e=>{ if(!e.target.closest('#mnavChip')) menu.classList.remove('open'); });
+  if(!(location.protocol==='http:'||location.protocol==='https:'))return;
+  try{
+    const [{initializeApp,getApps,getApp},{getAuth,onAuthStateChanged,signOut},{getFirestore,doc,onSnapshot}]=await Promise.all([
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js')
+    ]);
+    const cfg={apiKey:"AIzaSyAjiAm61IkH3wB1tjwOyGRrXAuRMKQyCcQ",authDomain:"maatram-859f4.firebaseapp.com",projectId:"maatram-859f4",storageBucket:"maatram-859f4.firebasestorage.app",messagingSenderId:"770970784123",appId:"1:770970784123:web:7c73c74ddb2179b69dedde"};
+    const app=getApps().length?getApp():initializeApp(cfg);
+    const auth=getAuth(app),db=getFirestore(app);
+    let unsub=null;
+    onAuthStateChanged(auth,u=>{
+      if(unsub){unsub();unsub=null;}
+      if(u){
+        inBtn.style.display='none';chip.style.display='flex';
+        document.getElementById('mnavPic').src=u.photoURL||'';
+        document.getElementById('mnavNm').textContent=u.displayName||'You';
+        unsub=onSnapshot(doc(db,'users',u.uid),s=>{
+          const v=s.exists()?s.data():{};
+          document.getElementById('mnavPts').textContent=(v.points||0)+' PTS';
+        });
+      }else{
+        inBtn.style.display='';chip.style.display='none';
+      }
+    });
+    document.getElementById('mnavOut').onclick=()=>signOut(auth);
+  }catch(e){}
+})();
+</script>
+
+<button id="perfBtn" type="button" aria-label="Toggle performance mode">
+  <span class="pf-ic">⚡</span>Performance<span class="pf-sw"></span>
+</button>
+<script>
+(function(){
+  var b=document.getElementById('perfBtn');
+  if(!b)return;
+  b.onclick=function(){
+    var on=!document.documentElement.classList.contains('perf');
+    try{localStorage.setItem('maatram_perf',on?'1':'0');}catch(_){}
+    location.reload();
+  };
+})();
+</script>
+</body>
+</html>

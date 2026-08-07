@@ -157,6 +157,20 @@
   footer{margin-top:56px;text-align:center;color:var(--dim);font-size:11px;letter-spacing:1.4px}
   footer b{color:var(--green)}
   @media(max-width:560px){.podium{gap:8px}.pod .nm{font-size:11px}}
+  #watchNote{max-width:520px;margin:0 auto 18px;text-align:center;font-size:12.5px;line-height:1.6;
+    color:var(--dim);background:var(--card);border:1px solid var(--stroke);border-radius:16px;padding:12px 16px}
+  #watchNote b{color:var(--ink);text-transform:capitalize}
+
+  /* ══ board cycle tabs ══ */
+  .tabs{display:flex;gap:8px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
+  .tabs button{min-height:44px;padding:11px 20px;border-radius:100px;cursor:pointer;
+    font-family:var(--font-display);font-weight:800;font-size:11px;letter-spacing:1.3px;text-transform:uppercase;
+    border:1px solid var(--stroke);background:transparent;color:var(--dim);transition:all .25s}
+  .tabs button:hover{color:var(--ink)}
+  .tabs button[aria-selected="true"]{color:#04120f;border-color:transparent;
+    background:linear-gradient(90deg,var(--green),var(--blue))}
+  #cycleNote{text-align:center;font-size:11.5px;color:var(--dim);letter-spacing:1.2px;margin-bottom:26px}
+
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
 
@@ -234,7 +248,7 @@ body{padding-top:52px!important}
 <a class="skip-link" href="#main">Skip to main content</a>
 <nav id="mnav" aria-label="Main navigation">
   <a class="mn-logo" href="index.html"><span class="mn-mark">M</span><b>MAATRAM</b></a>
-  <span class="mn-spacer"></span><a class="mn-link" href="index.html">Home</a><a class="mn-link" href="timers.html">Timers</a><a class="mn-link" href="app-gate.html">App Gate</a><a class="mn-link" href="study-room.html">Study Room</a><a class="mn-link" href="stats.html">Stats</a><a class="mn-link active" href="leaderboard.html">Leaderboard</a><a class="mn-link" href="socials.html">Socials</a><a class="mn-link" href="download.html">Get the app</a><a class="mn-link" href="roles.html">Account</a>
+  <span class="mn-spacer"></span><a class="mn-link" href="index.html">Home</a><a class="mn-link" href="timers.html">Timers</a><a class="mn-link" href="app-gate.html">App Gate</a><a class="mn-link" href="study-room.html">Study Room</a><a class="mn-link" href="stats.html">Stats</a><a class="mn-link active" href="leaderboard.html">Leaderboard</a><a class="mn-link" href="sports.html">Sports</a><a class="mn-link" href="socials.html">Socials</a><a class="mn-link" href="download.html">Get the app</a><a class="mn-link" href="roles.html">Account</a>
   <div id="mnavAuth">
     <a id="mnavIn" href="login.html">Sign in</a>
     <div id="mnavChip">
@@ -268,6 +282,14 @@ body{padding-top:52px!important}
     <h2>HALL OF FOCUS</h2>
     <p>Real students · Real points · Real change</p>
   </div>
+
+  <p id="watchNote" hidden>You are signed in as a <b id="watchRole">teacher</b> — this board ranks students only, so your name never appears here.</p>
+
+  <div class="tabs" role="tablist" aria-label="Leaderboard cycle">
+    <button id="tabMonth" role="tab" aria-selected="true" type="button">This month</button>
+    <button id="tabLife" role="tab" aria-selected="false" type="button">All time</button>
+  </div>
+  <p id="cycleNote"></p>
 
   <div class="join" id="join">
     <input id="nameIn" maxlength="20" placeholder="Your name" autocomplete="off">
@@ -315,9 +337,54 @@ let myId=store.get('maatram_board_me')||null;
 function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function initials(n){return esc(n.trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase()||'?')}
 
-let cloudUsers=[];
+/* Only students appear on the board. Teachers and parents use Maatram to
+   watch a class, so ranking them against the students they supervise makes
+   no sense. Docs written before roles existed have no role field: they are
+   students, so a missing role still competes.
+   ponytail: filtered client-side over a 120-doc window instead of a
+   where('role','==','student') query, which would need a composite index. */
+function competes(v){ return !v || !v.role || v.role==='student'; }
+
+let cloudUsers=[];   // this month's points  (users.points, zeroed on the 1st)
+let cloudLife=[];    // all time              (users.lifetime, never reset)
+let TAB='month';
+
+function cycleId(dt){ dt=dt||new Date();
+  return dt.getFullYear()+'-'+('0'+(dt.getMonth()+1)).slice(-2); }
+function cycleNote(){
+  const now=new Date();
+  const next=new Date(now.getFullYear(),now.getMonth()+1,1);
+  const month=now.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+  const reset=next.toLocaleDateString(undefined,{day:'numeric',month:'short'});
+  $('cycleNote').textContent = TAB==='month'
+    ? month+' \u00b7 scores archive and reset on '+reset
+    : 'Every point ever earned, across all months';
+}
+function setTab(t){
+  TAB=t;
+  $('tabMonth').setAttribute('aria-selected', t==='month'?'true':'false');
+  $('tabLife').setAttribute('aria-selected', t==='life'?'true':'false');
+  cycleNote();
+
+/* gate.js writes html[data-role] only after Firebase answers, which is later
+   than this script, so watch for it instead of reading once. */
+(function watchBanner(){
+  function show(){
+    const r=document.documentElement.dataset.role;
+    if(r!=='teacher'&&r!=='parent')return false;
+    $('watchRole').textContent=r;
+    $('watchNote').hidden=false;
+    return true;
+  }
+  if(show())return;
+  const mo=new MutationObserver(()=>{ if(show()) mo.disconnect(); });
+  mo.observe(document.documentElement,{attributes:true,attributeFilter:['data-role']});
+})(); render();
+}
+
 function render(){
-  const users=CLOUD?[...cloudUsers]:[...board.users].sort((a,b)=>b.points-a.points);
+  const cloudSrc = TAB==='month'?cloudUsers:cloudLife;
+  const users=CLOUD?[...cloudSrc]:[...board.users].sort((a,b)=>b.points-a.points);
   const pod=$('podium'),list=$('list'),empty=$('empty');
   pod.innerHTML='';list.innerHTML='';
   $('join').style.display=(CLOUD||myId)?'none':'flex';
@@ -357,6 +424,9 @@ $('joinBtn').onclick=()=>{
   save(board);render();
 };
 $('nameIn').addEventListener('keydown',e=>{if(e.key==='Enter')$('joinBtn').click();});
+$('tabMonth').onclick=()=>setTab('month');
+$('tabLife').onclick=()=>setTab('life');
+cycleNote();
 
 /* public hook: other pages (timers etc.) call this to award points */
 window.maatramAddPoints=function(pts){
@@ -413,16 +483,29 @@ async function bootCloud(){
       render();
     });
 
-    onSnapshot(query(collection(db,'users'),orderBy('points','desc'),limit(50)),snap=>{
+    onSnapshot(query(collection(db,'users'),orderBy('points','desc'),limit(120)),snap=>{
       cloudUsers=[];
       snap.forEach(d=>{const v=d.data();
+        if(!competes(v))return;                       /* teachers and parents do not compete */
         cloudUsers.push({id:d.id,name:v.name||'Student',photo:v.photo||'',points:v.points||0});});
+      cloudUsers=cloudUsers.slice(0,50);
       render();
     },err=>{
       console.warn('board read',err);
       $('modePill').textContent='Board offline';
       $('modePill').style.color='#ff5d73';
     });
+
+    /* all-time board: lifetime totals, written by the monthly roll in gate.js.
+       A user only appears here after their first page load of a new month. */
+    onSnapshot(query(collection(db,'users'),orderBy('lifetime','desc'),limit(120)),snap=>{
+      cloudLife=[];
+      snap.forEach(d=>{const v=d.data();
+        if(!competes(v))return;                       /* teachers and parents do not compete */
+        cloudLife.push({id:d.id,name:v.name||'Student',photo:v.photo||'',points:v.lifetime||0});});
+      cloudLife=cloudLife.slice(0,50);
+      if(TAB==='life') render();
+    },err=>{ console.warn('lifetime board read',err); });
   }catch(e){ console.warn('cloud boot failed, local mode',e); }
 }
 bootCloud();

@@ -24,7 +24,8 @@ group('nav link');
   const h=read(n+'.html');
   ok(n+': Account link present once', (h.match(/href="roles\.html"/g)||[]).length>=1
      && (h.match(/class="mn-link(?: active)?" href="roles\.html"/g)||[]).length===1);
-  ok(n+': nav has all 9 links', (h.match(/class="mn-link/g)||[]).length===9);
+  ok(n+': nav has all 10 links', (h.match(/class="mn-link/g)||[]).length===10);
+  ok(n+': Sports link present once', (h.match(/class="mn-link(?: active)?" href="sports\.html"/g)||[]).length===1);
 });
 
 group('gate.js behaviour');
