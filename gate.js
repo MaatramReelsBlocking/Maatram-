@@ -16,7 +16,7 @@
     +'html.mgate #mgate{visibility:visible!important}'
     +'#mgate{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;'
     +'background:#06090B;color:#8FA3A0;font:600 14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;'
-    +'letter-spacing:.04em;text-align:center;padding:24px}';
+    +'letter-spacing:.04em;text-align:center;padding:24px;white-space:pre-line}';
   (document.head||document.documentElement).appendChild(s);
   document.documentElement.classList.add('mgate');
 
@@ -58,6 +58,29 @@
     await F.updateDoc(F.doc(db,'users',uid),patch);
   }
 
+  /* ══ moderation ══
+     banned  : account frozen, every gated page refuses to open
+     kickAt  : one-shot force sign-out (admin "kick"); the value is a number,
+               the browser remembers the last one it has already acted on. */
+  function enforce(U,auth,d){
+    if(d && d.banned===true){
+      document.documentElement.classList.add('mgate');
+      veil('This account is suspended.'+(d.bannedReason?'\n'+d.bannedReason:'')
+           +'\nContact maatram97@gmail.com');
+      try{ U.signOut(auth); }catch(e){}
+      return true;
+    }
+    if(d && d.kickAt){
+      var seen=''; try{ seen=localStorage.getItem('maatram_kick_seen')||''; }catch(e){}
+      if(seen!==String(d.kickAt)){
+        try{ localStorage.setItem('maatram_kick_seen',String(d.kickAt)); }catch(e){}
+        try{ U.signOut(auth); }catch(e){}
+        send(); return true;
+      }
+    }
+    return false;
+  }
+
   function start(){
     veil('Checking your sign-in…');
     (async function(){
@@ -78,8 +101,13 @@
         var d={};
         try{ var snap=await F.getDoc(F.doc(db,'users',user.uid)); d=snap.exists()?snap.data():{}; }
         catch(e){ reveal(); return; }       /* read failed: let them work, do not trap them */
+        if(enforce(U,auth,d)) return;      /* banned or kicked by an admin */
         if(!d.role){ send(); return; }
         try{ document.documentElement.dataset.role=d.role; }catch(e){}
+        /* stay live: a ban or kick lands while the page is open */
+        try{ F.onSnapshot(F.doc(db,'users',user.uid),function(s){
+               if(s.exists()) enforce(U,auth,s.data());
+             }); }catch(e){}
         try{ await roll(F,db,user.uid,d); }catch(e){ }   /* never block the page on this */
         reveal();
       });

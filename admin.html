@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Admin Console — Maatram</title>
+<link rel="icon" href="favicon.ico">
+<style>
+:root{--bg:#06090B;--panel:#0C1412;--line:rgba(255,255,255,.10);--ink:#E7F5EF;--dim:#8FA3A0;
+      --green:#2FE38F;--blue:#37B6FF;--red:#FF6B6B;--amber:#FFC46B}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);
+  font:400 15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--green)}
+.wrap{max-width:1040px;margin:0 auto;padding:28px 18px 80px}
+header.bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:22px}
+.mark{width:28px;height:28px;border-radius:9px;background:linear-gradient(135deg,var(--green),var(--blue))}
+h1{font-size:17px;letter-spacing:.5px;margin:0}
+.tag{font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;
+  padding:4px 9px;border-radius:999px;border:1px solid var(--line);color:var(--dim)}
+.sp{flex:1}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:18px}
+h2{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--dim);margin:0 0 12px}
+button{font:inherit;font-size:12px;font-weight:700;cursor:pointer;color:var(--ink);
+  background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:10px;padding:7px 11px}
+button:hover{background:rgba(255,255,255,.10)}
+button.danger{color:var(--red);border-color:rgba(255,107,107,.35)}
+button.warn{color:var(--amber);border-color:rgba(255,196,107,.35)}
+button.go{color:#04120F;background:var(--green);border-color:transparent}
+input{font:inherit;font-size:14px;color:var(--ink);background:rgba(255,255,255,.04);
+  border:1px solid var(--line);border-radius:10px;padding:9px 11px;width:100%}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;letter-spacing:1.1px;text-transform:uppercase;color:var(--dim);
+  text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
+td{padding:10px 6px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle;font-size:14px}
+td.acts{white-space:nowrap;text-align:right}
+.who{display:flex;flex-direction:column}
+.who small{color:var(--dim);font-size:11px}
+.pts{font-variant-numeric:tabular-nums;font-weight:800}
+.flag{font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;
+  border-radius:999px;padding:2px 7px;border:1px solid var(--line);color:var(--dim);margin-left:6px}
+.flag.ban{color:var(--red);border-color:rgba(255,107,107,.4)}
+.flag.sus{color:var(--amber);border-color:rgba(255,196,107,.4)}
+#gate{min-height:70vh;display:grid;place-items:center;text-align:center;padding:24px}
+#log{font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--dim);
+  max-height:220px;overflow:auto;white-space:pre-wrap}
+dl.cmds{margin:0}
+dl.cmds dt{font-weight:800;font-size:13px;margin-top:12px}
+dl.cmds dd{margin:2px 0 0;color:var(--dim);font-size:13px}
+.hide{display:none!important}
+@media(max-width:640px){td.acts{text-align:left;white-space:normal}}
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div>
+    <div class="mark" style="margin:0 auto 14px"></div>
+    <p id="gateMsg">Checking your sign-in…</p>
+    <p><button id="gateBtn" class="go hide">Sign in</button></p>
+    <p><a href="index.html">← Back to Maatram</a></p>
+  </div>
+</div>
+
+<div class="wrap hide" id="app">
+  <header class="bar">
+    <div class="mark"></div>
+    <h1>MAATRAM ADMIN</h1>
+    <span class="tag" id="me">—</span>
+    <span class="sp"></span>
+    <a href="leaderboard.html">Leaderboard</a>
+    <button id="out">Sign out</button>
+  </header>
+
+  <div class="card">
+    <h2>Users</h2>
+    <div class="row" style="margin-bottom:12px">
+      <input id="q" placeholder="Search by name or email">
+      <button id="refresh">Reload</button>
+    </div>
+    <table>
+      <thead><tr><th>User</th><th>Role</th><th>Points</th><th>Lifetime</th><th></th></tr></thead>
+      <tbody id="rows"><tr><td colspan="5" style="color:var(--dim)">Loading…</td></tr></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Admin commands</h2>
+    <dl class="cmds">
+      <dt>Set points</dt>
+      <dd>Type any number and confirm. Use this to correct an inflated score back to what the
+          user actually earned. Admin writes skip the +100 per-write cap.</dd>
+      <dt>Zero</dt>
+      <dd>Sets this month's points to 0. Lifetime total is left alone.</dd>
+      <dt>Kick</dt>
+      <dd>Force sign-out. The account stays valid — the next page load logs them out once and
+          sends them back to the sign-in screen. Use for a live study-room disruption.</dd>
+      <dt>Ban</dt>
+      <dd>Freezes the account. Every gated page refuses to open, the user is signed out
+          immediately even mid-session, they cannot write points, and they disappear from the
+          leaderboard. Asks for a reason, which is shown to them.</dd>
+      <dt>Unban</dt>
+      <dd>Lifts the ban. The account works again on the next sign-in.</dd>
+      <dt>Delete</dt>
+      <dd>Removes the user document — points, role, class link, archive. The Google account can
+          sign up again as a new user. Not reversible.</dd>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h2>Recent admin actions</h2>
+    <div id="log">—</div>
+  </div>
+</div>
+
+<script type="module">
+/* ══ Maatram · admin console ══
+   Admin identity lives in TWO places and both must list the same address:
+     1. ADMINS below (controls this page)
+     2. isAdmin() in firestore.rules (controls what the database accepts)
+   Changing this file alone grants nothing. */
+const ADMINS = ['maatram97@gmail.com'];
+
+import {initializeApp,getApps,getApp} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import {getAuth,onAuthStateChanged,signOut,GoogleAuthProvider,signInWithPopup}
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import {getFirestore,collection,query,limit,orderBy,onSnapshot,doc,updateDoc,deleteDoc,
+        addDoc,serverTimestamp}
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+const app = getApps().length ? getApp() : initializeApp({
+  apiKey:"AIzaSyAjiAm61IkH3wB1tjwOyGRrXAuRMKQyCcQ",
+  authDomain:"maatram-859f4.firebaseapp.com",
+  projectId:"maatram-859f4",
+  storageBucket:"maatram-859f4.firebasestorage.app",
+  messagingSenderId:"770970784123",
+  appId:"1:770970784123:web:7c73c74ddb2179b69dedde"});
+const auth = getAuth(app), db = getFirestore(app);
+
+const $  = s => document.querySelector(s);
+const gate=$('#gate'), appEl=$('#app'), msg=$('#gateMsg'), btn=$('#gateBtn');
+let users=[], filter='';
+
+function deny(text,offerSignIn){
+  msg.textContent=text;
+  btn.classList.toggle('hide',!offerSignIn);
+  gate.classList.remove('hide'); appEl.classList.add('hide');
+}
+btn.onclick = () => signInWithPopup(auth,new GoogleAuthProvider()).catch(e=>deny(e.message,true));
+$('#out').onclick = () => signOut(auth);
+
+onAuthStateChanged(auth, user => {
+  if(!user){ deny('Sign in with the Maatram admin account.',true); return; }
+  if(!ADMINS.includes((user.email||'').toLowerCase())){
+    deny('This page is for Maatram admins only.\nSigned in as '+user.email,false);
+    return;
+  }
+  $('#me').textContent = user.email;
+  gate.classList.add('hide'); appEl.classList.remove('hide');
+  watchUsers(); watchLog();
+});
+
+/* ── live user list ── */
+function watchUsers(){
+  onSnapshot(query(collection(db,'users'),limit(300)), snap => {
+    users = snap.docs.map(d => ({id:d.id, ...d.data()}));
+    users.sort((a,b)=>(b.points||0)-(a.points||0));
+    draw();
+  }, e => { $('#rows').innerHTML='<tr><td colspan="5">'+e.message+'</td></tr>'; });
+}
+$('#q').oninput = e => { filter = e.target.value.trim().toLowerCase(); draw(); };
+$('#refresh').onclick = () => draw();
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function draw(){
+  const list = users.filter(u => !filter ||
+    (u.name||'').toLowerCase().includes(filter) || (u.email||'').toLowerCase().includes(filter));
+  $('#rows').innerHTML = list.length ? list.map(u => `
+    <tr>
+      <td><div class="who"><span>${esc(u.name||'(no name)')}
+        ${u.banned?'<span class="flag ban">banned</span>':''}
+        ${(u.points||0)>2000?'<span class="flag sus">check</span>':''}
+        </span><small>${esc(u.email||u.id)}</small></div></td>
+      <td>${esc(u.role||'—')}</td>
+      <td class="pts">${u.points||0}</td>
+      <td class="pts" style="color:var(--dim)">${u.lifetime||0}</td>
+      <td class="acts">
+        <button data-a="set"    data-u="${u.id}">Set points</button>
+        <button data-a="zero"   data-u="${u.id}">Zero</button>
+        <button data-a="kick"   data-u="${u.id}" class="warn">Kick</button>
+        <button data-a="${u.banned?'unban':'ban'}" data-u="${u.id}" class="danger">${u.banned?'Unban':'Ban'}</button>
+        <button data-a="del"    data-u="${u.id}" class="danger">Delete</button>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="5" style="color:var(--dim)">No users match.</td></tr>';
+}
+
+/* ── actions ── */
+$('#rows').addEventListener('click', async e => {
+  const b = e.target.closest('button[data-a]'); if(!b) return;
+  const uid = b.dataset.u, u = users.find(x=>x.id===uid) || {};
+  const who = u.name || u.email || uid;
+  b.disabled = true;
+  try{
+    if(b.dataset.a==='set'){
+      const v = prompt('Set points for '+who+'\nCurrent: '+(u.points||0), u.points||0);
+      if(v===null) return;
+      const n = parseInt(v,10);
+      if(!Number.isInteger(n) || n<0) { alert('Enter a whole number, 0 or more.'); return; }
+      await updateDoc(doc(db,'users',uid),{points:n});
+      await note('set points',uid,who,(u.points||0)+' -> '+n);
+    }
+    if(b.dataset.a==='zero'){
+      if(!confirm('Zero this month\u2019s points for '+who+'?')) return;
+      await updateDoc(doc(db,'users',uid),{points:0});
+      await note('zero points',uid,who,(u.points||0)+' -> 0');
+    }
+    if(b.dataset.a==='kick'){
+      if(!confirm('Sign '+who+' out right now?')) return;
+      await updateDoc(doc(db,'users',uid),{kickAt:Date.now()});
+      await note('kick',uid,who,'');
+    }
+    if(b.dataset.a==='ban'){
+      const why = prompt('Ban '+who+'. Reason shown to them:','Points were not earned honestly.');
+      if(why===null) return;
+      await updateDoc(doc(db,'users',uid),{banned:true,bannedReason:why,kickAt:Date.now()});
+      await note('ban',uid,who,why);
+    }
+    if(b.dataset.a==='unban'){
+      if(!confirm('Unban '+who+'?')) return;
+      await updateDoc(doc(db,'users',uid),{banned:false,bannedReason:''});
+      await note('unban',uid,who,'');
+    }
+    if(b.dataset.a==='del'){
+      if(prompt('Type DELETE to remove '+who+'\u2019s record permanently.')!=='DELETE') return;
+      await deleteDoc(doc(db,'users',uid));
+      await note('delete',uid,who,'');
+    }
+  }catch(err){ alert('Failed: '+err.message); }
+  finally{ b.disabled = false; }
+});
+
+async function note(action,uid,who,detail){
+  try{
+    await addDoc(collection(db,'admin_log'),
+      {action,uid,who,detail,by:auth.currentUser.email,at:serverTimestamp()});
+  }catch(e){ /* the action already happened; a missing log line is not worth an alert */ }
+}
+
+/* ── audit trail ── */
+function watchLog(){
+  onSnapshot(query(collection(db,'admin_log'),orderBy('at','desc'),limit(40)), snap => {
+    $('#log').textContent = snap.empty ? 'No actions yet.' : snap.docs.map(d=>{
+      const v=d.data(), t=v.at&&v.at.toDate?v.at.toDate().toLocaleString():'…';
+      return t+'  '+v.action+'  '+v.who+(v.detail?'  ('+v.detail+')':'')+'  by '+v.by;
+    }).join('\n');
+  }, e => { $('#log').textContent = e.message; });
+}
+</script>
+</body>
+</html>

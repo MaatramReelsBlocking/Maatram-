@@ -343,7 +343,7 @@ function initials(n){return esc(n.trim().split(/\s+/).map(w=>w[0]).join('').slic
    students, so a missing role still competes.
    ponytail: filtered client-side over a 120-doc window instead of a
    where('role','==','student') query, which would need a composite index. */
-function competes(v){ return !v || !v.role || v.role==='student'; }
+function competes(v){ return !!v && v.banned!==true && (!v.role || v.role==='student'); }
 
 let cloudUsers=[];   // this month's points  (users.points, zeroed on the 1st)
 let cloudLife=[];    // all time              (users.lifetime + this month's points)
