@@ -31,7 +31,7 @@ ok('documents each command',      ['Set points','Zero','Kick','Ban','Unban','Del
 
 console.log('\npassphrase step');
 ok('salt + hash constants',       /const PW_SALT =/.test(admin) && /const PW_HASH =/.test(admin));
-ok('ships with the step off',     /const PW_HASH = '';/.test(admin));
+ok('passphrase step is switched on',/const PW_HASH = '[0-9a-f]{64}';/.test(admin));
 ok('hashes with SHA-256',         /digest\('SHA-256'/.test(admin));
 ok('never stores the plaintext',  !/PW_PLAIN|password:\s*'/.test(admin));
 ok('compares against PW_HASH',    /got === PW_HASH/.test(admin));
@@ -43,10 +43,7 @@ ok('auto-locks when idle',        /IDLE_LOCK_MS/.test(admin));
 ok('watchers start once only',    /if\(!started\)\{ started=true;/.test(admin));
 ok('documents the Lock command',  admin.includes('<dt>Lock</dt>'));
 
-const hasher = R('make-hash.html');
-ok('hash tool uses the same salt',
-   /'maatram-admin-v1:'/.test(hasher) && /'maatram-admin-v1:'/.test(admin));
-ok('hash tool is not indexable',  /noindex/.test(hasher));
+ok('hash generator is gone',      !fs.existsSync(path.join(__dirname,'make-hash.html')));
 
 console.log('\nfirestore.rules');
 ok('has an isAdmin() function',   /function isAdmin\(\)/.test(rules));

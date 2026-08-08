@@ -50,12 +50,14 @@ out once. Use it for a live study-room problem.
 
 ## Second step — admin passphrase
 
-`admin.html` ships with the passphrase step **off** (`PW_HASH = ''`). To switch it on:
+The passphrase step is **already switched on** in this `admin.html` — your hash is baked in
+at `PW_HASH`. Nothing to set up. Sign in, then type your passphrase.
 
-1. Upload `make-hash.html`, open it, type the passphrase you want.
-2. Copy the 64-character hash.
-3. In `admin.html`, set `const PW_HASH = 'paste-it-here';`
-4. Re-upload `admin.html` and **delete `make-hash.html` from the repo.**
+If `make-hash.html` is still sitting in your repo, delete it: open the file on GitHub →
+`⋯` menu → **Delete file** → Commit. It is not needed again unless you change the passphrase.
+
+To change the passphrase later, ask me for a fresh `make-hash.html`, or send me the new
+64-character hash and I will rebuild this file.
 
 Only the hash is stored, never the passphrase itself. There is no reset — forget it and
 you edit `PW_HASH` back to `''`. Extra: a **Lock** button in the header, and the console
