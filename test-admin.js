@@ -29,6 +29,25 @@ ok('user text is escaped',        /function esc\(/.test(admin) && /esc\(u\.name/
 ok('documents each command',      ['Set points','Zero','Kick','Ban','Unban','Delete']
                                     .every(c => admin.includes('<dt>' + c + '</dt>')));
 
+console.log('\npassphrase step');
+ok('salt + hash constants',       /const PW_SALT =/.test(admin) && /const PW_HASH =/.test(admin));
+ok('ships with the step off',     /const PW_HASH = '';/.test(admin));
+ok('hashes with SHA-256',         /digest\('SHA-256'/.test(admin));
+ok('never stores the plaintext',  !/PW_PLAIN|password:\s*'/.test(admin));
+ok('compares against PW_HASH',    /got === PW_HASH/.test(admin));
+ok('console opens only via one door',
+   (admin.match(/appEl\.classList\.remove\('hide'\)/g)||[]).length === 1);
+ok('skipped when hash is blank',  /if\(PW_HASH\) askPass\(\); else openConsole\(\);/.test(admin));
+ok('has a Lock button',           /id="lockNow"/.test(admin));
+ok('auto-locks when idle',        /IDLE_LOCK_MS/.test(admin));
+ok('watchers start once only',    /if\(!started\)\{ started=true;/.test(admin));
+ok('documents the Lock command',  admin.includes('<dt>Lock</dt>'));
+
+const hasher = R('make-hash.html');
+ok('hash tool uses the same salt',
+   /'maatram-admin-v1:'/.test(hasher) && /'maatram-admin-v1:'/.test(admin));
+ok('hash tool is not indexable',  /noindex/.test(hasher));
+
 console.log('\nfirestore.rules');
 ok('has an isAdmin() function',   /function isAdmin\(\)/.test(rules));
 ok('admin may update any user',   /allow update: if isAdmin\(\);/.test(rules));

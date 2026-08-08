@@ -44,7 +44,7 @@ td.acts{white-space:nowrap;text-align:right}
   border-radius:999px;padding:2px 7px;border:1px solid var(--line);color:var(--dim);margin-left:6px}
 .flag.ban{color:var(--red);border-color:rgba(255,107,107,.4)}
 .flag.sus{color:var(--amber);border-color:rgba(255,196,107,.4)}
-#gate{min-height:70vh;display:grid;place-items:center;text-align:center;padding:24px}
+#gate,#lock{min-height:70vh;display:grid;place-items:center;text-align:center;padding:24px}
 #log{font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--dim);
   max-height:220px;overflow:auto;white-space:pre-wrap}
 dl.cmds{margin:0}
@@ -65,6 +65,18 @@ dl.cmds dd{margin:2px 0 0;color:var(--dim);font-size:13px}
   </div>
 </div>
 
+<div id="lock" class="hide">
+  <div>
+    <div class="mark" style="margin:0 auto 14px"></div>
+    <p style="color:var(--dim);font-size:13px">Second step — admin passphrase</p>
+    <p style="max-width:300px;margin:14px auto">
+      <input id="pw" type="password" autocomplete="off" placeholder="Passphrase"></p>
+    <p id="pwMsg" style="color:var(--red);font-size:12px;min-height:18px"></p>
+    <p><button id="pwGo" class="go">Unlock</button>
+       <button id="pwOut">Sign out</button></p>
+  </div>
+</div>
+
 <div class="wrap hide" id="app">
   <header class="bar">
     <div class="mark"></div>
@@ -72,6 +84,7 @@ dl.cmds dd{margin:2px 0 0;color:var(--dim);font-size:13px}
     <span class="tag" id="me">—</span>
     <span class="sp"></span>
     <a href="leaderboard.html">Leaderboard</a>
+    <button id="lockNow">Lock</button>
     <button id="out">Sign out</button>
   </header>
 
@@ -104,6 +117,9 @@ dl.cmds dd{margin:2px 0 0;color:var(--dim);font-size:13px}
           leaderboard. Asks for a reason, which is shown to them.</dd>
       <dt>Unban</dt>
       <dd>Lifts the ban. The account works again on the next sign-in.</dd>
+      <dt>Lock</dt>
+      <dd>Puts the passphrase screen back up without signing out. The console also
+          locks itself after five minutes with no clicks or keys.</dd>
       <dt>Delete</dt>
       <dd>Removes the user document — points, role, class link, archive. The Google account can
           sign up again as a new user. Not reversible.</dd>
@@ -123,6 +139,16 @@ dl.cmds dd{margin:2px 0 0;color:var(--dim);font-size:13px}
      2. isAdmin() in firestore.rules (controls what the database accepts)
    Changing this file alone grants nothing. */
 const ADMINS = ['maatram97@gmail.com'];
+
+/* ── second step: admin passphrase ──
+   SHA-256 of  SALT + your passphrase.  Generate it with make-hash.html,
+   paste the 64-character result here, then delete make-hash.html from the repo.
+   Read ADMIN-README before you rely on this: it stops someone using your
+   already-signed-in browser. It does NOT stop someone who reads this file.
+   The database itself is guarded by the email in firestore.rules. */
+const PW_SALT = 'maatram-admin-v1:';
+const PW_HASH = '';          // '' = passphrase step is off
+const IDLE_LOCK_MS = 5*60*1000;
 
 import {initializeApp,getApps,getApp} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import {getAuth,onAuthStateChanged,signOut,GoogleAuthProvider,signInWithPopup}
@@ -159,9 +185,46 @@ onAuthStateChanged(auth, user => {
     return;
   }
   $('#me').textContent = user.email;
-  gate.classList.add('hide'); appEl.classList.remove('hide');
-  watchUsers(); watchLog();
+  gate.classList.add('hide');
+  if(PW_HASH) askPass(); else openConsole();
 });
+
+/* ── second step: passphrase ── */
+const lock=$('#lock'), pw=$('#pw'), pwMsg=$('#pwMsg');
+let started=false;
+
+async function sha256(text){
+  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+function askPass(){
+  appEl.classList.add('hide'); lock.classList.remove('hide');
+  pw.value=''; pwMsg.textContent=''; setTimeout(()=>pw.focus(),50);
+}
+function openConsole(){
+  lock.classList.add('hide'); appEl.classList.remove('hide');
+  idle();
+  if(!started){ started=true; watchUsers(); watchLog(); }
+}
+async function tryPass(){
+  const got = await sha256(PW_SALT + pw.value);
+  if(got === PW_HASH){ openConsole(); return; }
+  pwMsg.textContent = 'Wrong passphrase.';
+  pw.value=''; pw.focus();
+}
+$('#pwGo').onclick = tryPass;
+pw.addEventListener('keydown', e => { if(e.key==='Enter') tryPass(); });
+$('#pwOut').onclick = () => signOut(auth);
+$('#lockNow').onclick = () => { if(PW_HASH) askPass(); else signOut(auth); };
+
+/* auto-lock after a spell of no clicks or keys */
+let idleTimer;
+function idle(){
+  if(!PW_HASH) return;
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(()=>{ if(!lock.classList.contains('hide')) return; askPass(); }, IDLE_LOCK_MS);
+}
+['click','keydown','pointerdown'].forEach(ev => addEventListener(ev, idle, true));
 
 /* ── live user list ── */
 function watchUsers(){

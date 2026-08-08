@@ -48,6 +48,34 @@ leaderboard skips them.
 `kickAt` is a one-shot force sign-out — the account still works, they just get logged
 out once. Use it for a live study-room problem.
 
+## Second step — admin passphrase
+
+`admin.html` ships with the passphrase step **off** (`PW_HASH = ''`). To switch it on:
+
+1. Upload `make-hash.html`, open it, type the passphrase you want.
+2. Copy the 64-character hash.
+3. In `admin.html`, set `const PW_HASH = 'paste-it-here';`
+4. Re-upload `admin.html` and **delete `make-hash.html` from the repo.**
+
+Only the hash is stored, never the passphrase itself. There is no reset — forget it and
+you edit `PW_HASH` back to `''`. Extra: a **Lock** button in the header, and the console
+locks itself after five minutes of no clicks or keys.
+
+### What this layer really does
+
+It stops someone using **your already-signed-in browser** — a friend on your laptop at
+school, a phone you left open. That is the real risk and this closes it.
+
+It does **not** stop someone who reads the page source: the check runs in their browser,
+so they can skip it. That does not matter, because skipping it gets them an empty screen —
+**every ban, kick and points edit is checked again by `firestore.rules` against the signed-in
+email.** A stranger with the file, the hash and the whole source still cannot change one
+point. The page is a convenience; the rules are the lock.
+
+The one thing that actually breaks everything is somebody getting into
+`maatram97@gmail.com`. Put 2-step verification on that Google account — that is worth more
+than any passphrase in this file.
+
 ## Honest limit
 
 The rules now cap every single write at +100 points and cap a month at 3000, so one
