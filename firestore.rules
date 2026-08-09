@@ -32,7 +32,7 @@ service cloud.firestore {
 
       /* ── a normal user editing their own doc ── */
       allow update: if request.auth != null && request.auth.uid == uid
-                    && old().banned != true          // banned accounts are frozen
+                    && old().get('banned', false) != true   // banned accounts are frozen
                     && neu().points is int
                     && neu().points >= 0
                     && neu().points <= 3000           // hard ceiling on a month
@@ -45,8 +45,8 @@ service cloud.firestore {
                           && neu().points <= old().points + 100)
                          // monthly roll: archive this month, then zero
                       || (   neu().points == 0
-                          && neu().cycle != old().cycle
-                          && neu().lifetime == old().get('lifetime',0) + old().points)
+                          && neu().cycle != old().get('cycle', '')
+                          && neu().lifetime == old().get('lifetime',0) + old().get('points',0))
                        );
 
       allow delete: if isAdmin();

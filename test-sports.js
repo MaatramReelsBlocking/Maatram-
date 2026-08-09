@@ -148,9 +148,9 @@ ok('events readable when signed in', /allow read:\s+if request\.auth != null;/.t
 ok('events created only by author', /request\.resource\.data\.by == request\.auth\.uid/.test(rules));
 ok('events edited only by author', /resource\.data\.by == request\.auth\.uid/.test(rules));
 ok('event title length capped', /title\.size\(\) <= 80/.test(rules));
-ok('reset branch allows zeroing', /request\.resource\.data\.points == 0/.test(rules));
-ok('reset branch requires a cycle change', /request\.resource\.data\.cycle != resource\.data\.cycle/.test(rules));
-ok('normal caps still enforced', /resource\.data\.points \+ 200/.test(rules));
+ok('reset branch allows zeroing', /neu\(\)\.points == 0/.test(rules));
+ok('reset branch requires a cycle change', /neu\(\)\.cycle != old\(\)\.get\('cycle', ?''\)/.test(rules));
+ok('normal caps still enforced', /old\(\)\.points \+ 100/.test(rules));
 ok('classes block untouched', /match \/classes\/\{code\}/.test(rules));
 
 /* ── 11. flat delivery (he uploads to the repo root) ── */

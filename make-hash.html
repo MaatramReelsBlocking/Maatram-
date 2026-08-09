@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Admin passphrase hash — Maatram</title>
+<style>
+:root{--bg:#06090B;--panel:#0C1412;--line:rgba(255,255,255,.10);--ink:#E7F5EF;--dim:#8FA3A0;--green:#2FE38F}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);display:grid;place-items:center;min-height:100vh;
+  padding:24px;font:400 15px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;max-width:520px;width:100%}
+h1{font-size:15px;letter-spacing:.6px;margin:0 0 6px}
+p{color:var(--dim);font-size:13px}
+input{font:inherit;width:100%;color:var(--ink);background:rgba(255,255,255,.04);
+  border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:10px 0}
+#out{font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--green);
+  word-break:break-all;background:rgba(47,227,143,.07);border:1px solid rgba(47,227,143,.25);
+  border-radius:10px;padding:12px;min-height:44px}
+button{font:inherit;font-size:13px;font-weight:700;color:#04120F;background:var(--green);
+  border:0;border-radius:10px;padding:9px 14px;cursor:pointer;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>ADMIN PASSPHRASE HASH</h1>
+  <p>Type the passphrase you want. Copy the 64-character line, paste it into
+     <b>admin.html</b> as <code>PW_HASH</code>, then delete this file from the repo.
+     Nothing is sent anywhere — the hash is made in this browser.</p>
+  <input id="pw" type="text" autocomplete="off" placeholder="Your passphrase">
+  <div id="out">—</div>
+  <button id="copy">Copy hash</button>
+</div>
+<script type="module">
+const SALT='maatram-admin-v1:';
+const pw=document.getElementById('pw'), out=document.getElementById('out');
+async function go(){
+  if(!pw.value){ out.textContent='—'; return; }
+  const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(SALT+pw.value));
+  out.textContent=[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+pw.addEventListener('input',go);
+document.getElementById('copy').onclick=()=>{
+  if(out.textContent.length===64) navigator.clipboard.writeText(out.textContent);
+};
+</script>
+</body>
+</html>

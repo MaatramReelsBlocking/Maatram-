@@ -595,11 +595,24 @@ dialog#pick::backdrop{background:rgba(3,6,8,.82);backdrop-filter:blur(6px)}
         enter(me,{role:'teacher',classCode:code,points:0},true);
         msg('');
       }catch(e){
-        msg('Could not create the class: '+(e.code||e.message),'err');
+        msg(saveErr(e),'err');
         console.warn('create class',e);
       }
       $('mkClass').disabled=false;
     };
+
+    function saveErr(e){
+      var c=e&&e.code||'';
+      if(c==='permission-denied') return 'Your profile could not be saved. The database rules need publishing — tell the Maatram admin.';
+      if(c==='unavailable') return 'You look offline. Check your connection and try again.';
+      return 'Could not save: '+(c||e.message);
+    }
+    function readErr(e){
+      var c=e&&e.code||'';
+      if(c==='permission-denied') return 'That code could not be checked. The database rules need publishing — tell the Maatram admin.';
+      if(c==='unavailable') return 'You look offline. Check your connection and try again.';
+      return 'Could not check that code: '+(c||e.message);
+    }
 
     $('joinBtn').onclick=async function(){
       if(!me) return;
@@ -611,7 +624,9 @@ dialog#pick::backdrop{background:rgba(3,6,8,.82);backdrop-filter:blur(6px)}
         if(!c.exists()){ msg('No class with that code.','err'); $('joinBtn').disabled=false; return; }
         joined=code;
         if(chosen==='student'){
-          await F.setDoc(F.doc(db,'users',me.uid),{role:'student',classCode:code},{merge:true});
+          try{
+            await F.setDoc(F.doc(db,'users',me.uid),{role:'student',classCode:code},{merge:true});
+          }catch(e){ msg(saveErr(e),'err'); console.warn('join save',e); $('joinBtn').disabled=false; return; }
           enter(me,{role:'student',classCode:code,points:0},true);
         }else{
           var qs=await F.getDocs(F.query(F.collection(db,'users'),F.where('classCode','==',code)));
@@ -622,13 +637,13 @@ dialog#pick::backdrop{background:rgba(3,6,8,.82);backdrop-filter:blur(6px)}
               await F.setDoc(F.doc(db,'users',me.uid),
                 {role:'parent',classCode:joined,childUid:kid.uid,childName:kid.name||'Your child'},{merge:true});
               enter(me,{role:'parent',classCode:joined,childUid:kid.uid,childName:kid.name,points:0},true);
-            }catch(e){ msg('Could not save: '+(e.code||e.message),'err'); }
+            }catch(e){ msg(saveErr(e),'err'); console.warn('parent save',e); }
           });
           step('child');
         }
         msg('');
       }catch(e){
-        msg('Could not check that code: '+(e.code||e.message),'err');
+        msg(readErr(e),'err');
         console.warn('join',e);
       }
       $('joinBtn').disabled=false;

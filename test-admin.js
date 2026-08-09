@@ -50,10 +50,10 @@ ok('has an isAdmin() function',   /function isAdmin\(\)/.test(rules));
 ok('admin may update any user',   /allow update: if isAdmin\(\);/.test(rules));
 ok('per-write gain capped at 100',/points \+ 100|old\(\)\.points \+ 100/.test(rules));
 ok('hard ceiling on points',      /points <= 3000/.test(rules));
-ok('banned accounts frozen',      /old\(\)\.banned != true/.test(rules));
+ok('banned accounts frozen',      /old\(\)\.get\('banned', ?false\) != true/.test(rules));
 ok('moderation fields locked',    /!touched\(\['banned','kickAt','bannedReason','isAdmin'\]\)/.test(rules));
 ok('lifetime not free to set',    /!touched\(\['lifetime'\]\)/.test(rules));
-ok('roll must add the real total',/neu\(\)\.lifetime == old\(\)\.get\('lifetime',0\) \+ old\(\)\.points/.test(rules));
+ok('roll must add the real total',/neu\(\)\.lifetime == old\(\)\.get\('lifetime',0\) \+ old\(\)\.get\('points',0\)/.test(rules));
 ok('only admins delete a user',   /allow delete: if isAdmin\(\);/.test(rules));
 ok('admin_log is admin-only',     /match \/admin_log/.test(rules) && /allow update, delete: if false;/.test(rules));
 
