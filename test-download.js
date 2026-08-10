@@ -4,7 +4,7 @@ const { JSDOM } = require('jsdom');
 
 const ROOT = __dirname;
 const HTML = fs.readFileSync(path.join(ROOT, 'download.html'), 'utf8');
-const APK = path.join(ROOT, 'maatram-v1.0.apk');
+const APK = path.join(ROOT, 'maatram-v1.1.apk');
 
 let pass = 0, fail = 0;
 const ok = (name, cond, extra) => {
@@ -39,7 +39,7 @@ ok('theme.js loaded', !!doc.querySelector('script[src="theme.js"]'));
 /* ---------- download wiring ---------- */
 const dl = doc.getElementById('dlBtn');
 ok('download button exists', !!dl);
-ok('href points at versioned apk', dl.getAttribute('href') === 'maatram-v1.0.apk',
+ok('href points at versioned apk', dl.getAttribute('href') === 'maatram-v1.1.apk',
   dl && dl.getAttribute('href'));
 ok('href resolves to a real file', fs.existsSync(path.join(ROOT, dl.getAttribute('href'))));
 ok('download attribute present', dl.hasAttribute('download'));
