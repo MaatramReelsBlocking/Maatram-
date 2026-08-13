@@ -1,0 +1,40 @@
+name: Feature request
+description: Suggest something Maatram should do
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve for a student
+      description: Start with the student, not the feature.
+      placeholder: I keep opening Instagram right after a study session ends, because...
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you think should happen
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of the app
+      options:
+        - Timers
+        - App Gate / friction layer
+        - Hard Lock / Android blocking
+        - Study rooms
+        - Stats
+        - Leaderboard / points
+        - Accounts and roles
+        - Something else
+    validations:
+      required: true
+  - type: checkboxes
+    id: constraints
+    attributes:
+      label: Constraints
+      options:
+        - label: This can be built with plain HTML, CSS and JavaScript, no build step
+        - label: I have checked this is not already an open issue
