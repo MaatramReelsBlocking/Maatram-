@@ -1,0 +1,55 @@
+name: Bug report
+description: Something is broken
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please fill this in properly. A report without the device and the steps takes
+        three rounds to resolve.
+  - type: input
+    id: page
+    attributes:
+      label: Which page or screen
+      placeholder: app-gate.html / Hard Lock card
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Sign in
+        2. Start a 5 minute Hard Lock
+        3. Open YouTube
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected, and what happened instead
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+      placeholder: Samsung SM-M315F, Android 13, Chrome 126
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where did you see it
+      options:
+        - Live site
+        - Android app
+        - Opened the HTML file locally
+    validations:
+      required: true
+  - type: textarea
+    id: console
+    attributes:
+      label: Console output
+      description: Anything red in the browser console, or the logcat line for Android.
+      render: shell
